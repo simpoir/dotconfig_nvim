@@ -1,6 +1,8 @@
 " ==================================================
 " Simpoir's unfriendly but convenient nvim config
 "
+" Neovim 0.5.0 (nightly) is required at the moment.
+"
 " Copyright (c) 2019-2020 Simon Poirier
 "
 " Permission is hereby granted, free of charge, to any person obtaining a copy
