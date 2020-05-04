@@ -93,9 +93,6 @@ set number
 set list
 set colorcolumn=80
 let g:airline_powerline_fonts = 1
-let g:ale_sign_error = "🔥"
-let g:ale_sign_warning = "⚠"
-let g:AutoPairsFlyMode = 1
 
 "
 " Tooling
