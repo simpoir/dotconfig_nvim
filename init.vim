@@ -32,27 +32,26 @@ call plug#begin('~/.config/nvim/plugged')
 Plug 'flazz/vim-colorschemes'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'mhinz/vim-signify'  " like gitgutter for all
+Plug 'mhinz/vim-signify'                  " like gitgutter for all
 Plug 'tpope/vim-fugitive'
-Plug 'damofthemoon/vim-leader-mapper'
-Plug 'ryanoasis/vim-devicons'
+Plug 'liuchengxu/vim-which-key'
 
 "
 " Coding
 "
 Plug 'mhinz/vim-startify'
-"Plug 'valloric/youcompleteme'  " replaced by nvim-lsp
-Plug 'neovim/nvim-lsp'
-"Plug 'w0rp/ale'  " replaced by nvim-lsp
+Plug 'neovim/nvim-lspconfig'
+Plug 'nvim-lua/completion-nvim'
+Plug 'nvim-lua/diagnostic-nvim'
+
 Plug 'embear/vim-localvimrc'
 Plug 'janko-m/vim-test'
-Plug 'craigemery/vim-autotag'
 Plug 'Vimjas/vim-python-pep8-indent'
 
 "
 " Syntax
 "
-Plug 'knatsakis/deb.vim'  " support for xz
+Plug 'knatsakis/deb.vim'                  " support for xz
 Plug 'kana/vim-textobj-user'
 Plug 'bps/vim-textobj-python'
 Plug 'saltstack/salt-vim'
@@ -64,9 +63,10 @@ Plug 'Glench/Vim-Jinja2-Syntax'
 Plug 'tpope/vim-sleuth'
 Plug 'matze/vim-move'
 Plug 'fvictorio/vim-extract-variable'
-" Plug 'jiangmiao/auto-pairs'  " more annoying than it is worth
+" Plug 'tmsvg/pear-tree'     " bad perf
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-commentary'
+Plug 'psf/black', { 'branch': 'stable' }
 
 "
 " Tooling
@@ -77,17 +77,31 @@ Plug 'tpope/vim-obsession'
 Plug 'mhinz/vim-grepper'
 Plug 'airblade/vim-rooter'
 Plug 'junkblocker/patchreview-vim'
-Plug 'jaxbot/browserlink.vim'
+" Plug 'jaxbot/browserlink.vim'
 Plug 'sjl/gundo.vim'
-
+Plug 'kopischke/vim-fetch'
+Plug 'scrooloose/nerdtree'
 cal plug#end()
+
+"
+" New vim packs
+"
+packadd termdebug
+let g:termdebug_wide=1
+let g:termdebugger="rust-gdb"
 
 
 "
 " Look and feel
 "
 set termguicolors
+au BufRead * set cursorline
 colo space-vim-dark
+" colo molokai
+hi clear SpellBad
+hi SpellBad cterm=underline ctermfg=168 ctermbg=9 gui=undercurl guisp=Red
+hi LspDiagnosticsUnderlineError cterm=bold ctermfg=160 ctermbg=235 guifg=normal gui=undercurl guisp=#e0211d
+hi LspDiagnosticsUnderlineWarning cterm=bold ctermfg=136 guifg=normal gui=undercurl guisp=#dc752f
 set mouse=
 set number
 set list
@@ -99,6 +113,24 @@ let g:airline_powerline_fonts = 1
 "
 let g:localvimrc_persistent = 1
 let g:localvimrc_name = ['.lvimrc', '_vimrc_local.vim']
+
+"
+" LSP
+"
+" nvim lsp
+lua <<EOF
+local function on_attach(client, bufnr)
+  require'diagnostic'.on_attach(client, bufnr)
+  require'completion'.on_attach(client, bufnr)
+end
+require'nvim_lsp'.gopls.setup{on_attach=on_attach}
+require'nvim_lsp'.pyls.setup{on_attach=on_attach}
+require'nvim_lsp'.rust_analyzer.setup{on_attach=on_attach, capabilities={
+  textDocument = { completion = { completionItem = { snippetSupport = false}}}
+}}
+EOF
+" let g:diagnostic_enable_virtual_text = 0
+
 
 "
 " Edition
@@ -131,58 +163,49 @@ let g:startify_lists = [
 "
 " Mappings
 "
-nnoremap <silent> <leader> :cal leaderMapper#start() "<Space>"<CR>
-vnoremap <silent> <leader> :cal leaderMapper#start() "<Space>"<CR>
-let g:leaderMenu = {'name': 'Global',
-  \'f': [{'name': 'Files',
+cal which_key#register("Leader", "g:lmap")
+nnoremap <silent> <leader> :<c-u>WhichKey "Leader"<CR>
+vnoremap <silent> <leader> :<c-u>WhichKeyVisual "Leader"<CR>
+let g:lmap = {'name': 'Global',
+  \'c': {'name': 'Cursor',
+    \'b': [':!xdg-open https://pad.lv/<cword>', 'Launchpad Bug'],
+  \},
+  \'d': {'name': 'Debug',
+    \'b': [':Break', 'Break'],
+    \'d': [':Termdebug', 'Debug'],
+    \'c': [':Clear', 'Clear breakpoint'],
+    \},
+  \'f': {'name': 'Files',
+    \'a': ['Alternate()', 'jump to Alternate file.'],
     \'d': [':e $MYVIMRC', 'Open dotfile'],
-    \'f': [":cal fzf#vim#files('', fzf#vim#with_preview({'source': 'rg --files'}), 0)", 'Find file'],
+    \'f': ["fzf#vim#files('', fzf#vim#with_preview({'source': 'rg --files'}), 0)", 'Find file'],
     \'g': [":Grepper -tool rg", 'Grep'],
-    \}, 'Files'],
-  \'l': [{'name': 'LSP',
-    \'d': [":lua require'vim.lsp.buf'.definition()", 'Definition'],
-    \'e': [":lua require'vim.lsp.util'.show_line_diagnostics()", 'Line Error'],
-    \'f': [":lua require'vim.lsp.buf'.formatting()", "format"],
-    \'h': [":lua require'vim.lsp.buf'.hover()", "hover"],
-    \}, 'LSP'],
-  \'t': [{'name': 'Test',
+    \},
+  \'l': {'name': 'Language',
+    \'d': ["luaeval('vim.lsp.buf.definition()')", 'Definition'],
+    \'e': ["luaeval('vim.lsp.util.show_line_diagnostics()')", 'Errors'],
+    \'n': ["NextDiagnostic", 'Next Error'],
+    \'p': ["PrevDiagnostic", 'Prev Error'],
+    \'f': ["luaeval('vim.lsp.buf.formatting()')", "format"],
+    \'h': ["luaeval('vim.lsp.buf.hover()')", "hover"],
+    \'i': ["luaeval('vim.lsp.buf.implementation()')", 'Implementation'],
+    \'q': ["luaeval('vim.lsp.buf.code_action()')", 'Quick-fix'],
+    \'r': ["luaeval('vim.lsp.buf.rename()')", 'Rename symbol']
+    \},
+  \'t': {'name': 'Test',
     \'f': [':TestFile', 'Test file'],
     \'l': [':TestLast', 'Retest last'],
     \'n': [':TestNearest', 'Test nearest'],
-    \}, 'Tests'],
+    \},
   \}
 
-"
-" LSP
-"
-lua <<EOF
-  lsp = require'nvim_lsp'
-  lsp.pyls.setup{}
-  lsp.rust_analyzer.setup{}
-  lsp.gopls.setup{}
-  lsp.vimls.setup{}
-  lsp.clangd.setup{}
+augroup autoformat
+  au!
+  au BufWritePre *.rs lua vim.lsp.buf.formatting_sync(nil, 1000)
+augroup END
 
-  -- publish diags to quickfix
-  do
-    local method = 'textDocument/publishDiagnostics'
-    local default_callback = vim.lsp.callbacks[method]
-    vim.lsp.callbacks[method] = function(err, method, result, client_id)
-      default_callback(err, method, result, client_id)
-      if result and result.diagnostics then
-        for _, v in ipairs(result.diagnostics) do
-          v.uri = v.uri or result.uri
-          v.filename = v.uri
-          v.lnum = v.range.start.line + 1
-          v.col = v.range.start.character + 1
-          v.text = v.message
-        end
-        vim.lsp.util.set_qflist(result.diagnostics)
-      end
-    end
-  end
-EOF
-set completefunc=v:lua.vim.lsp.omnifunc
+set completeopt=menuone,noselect,noinsert
+set shortmess+=c
 
 "
 " Utility
@@ -199,6 +222,7 @@ command! ReloadVim call ReloadVim()
 inoremap rpudb ;<bs><esc>:cal setline(line("."), getline(line("."))."import pudb.remote; pudb.remote.set_trace(term_size=(".&columns.", ".&lines."))")<cr><cr>
 inoremap pudb import pudb; pudb.set_trace()
 
+let g:black_linelength = 79
 let g:bl_pagefiletypes = ['html', 'javascript', 'markdown', 'liquid', 'scss']
 
 command! EmailAddr call fzf#run({'source': 'cat ~/.mail/staff', 'sink': {choice -> append(line('.'), choice)}})
@@ -206,4 +230,23 @@ command! EmailAddr call fzf#run({'source': 'cat ~/.mail/staff', 'sink': {choice 
 " Human autocorrect
 command! W w
 
-command! WriteAsRoot %!sudo tee %
+command! WriteAsRoot %!env SUDO_ASKPASS='/usr/bin/ssh-askpass' sudo -A tee %
+
+func! Alternate()
+  if &filetype == 'python'
+    let l:alt=matchlist(expand('%:p'), '^\(.*/\)tests/test_\(.*\.py\)$')
+    if empty(l:alt)
+      edit %:h/tests/test_%:t
+    else
+      exe 'edit ' . fnameescape(l:alt[1] . l:alt[2])
+    endif
+  elseif &filetype == 'go'
+    if match(expand('%:p'), '_test.go$') != -1
+      exe 'edit ' . fnameescape(substitute(expand('%:p'), '_test.go$', '.go', ''))
+    else
+      exe 'edit ' . fnameescape(substitute(expand('%:p'), '.go$', '_test.go', ''))
+    endif
+  endif
+endf
+
+autocmd BufNewFile,BufRead /tmp/user/*/neomutt*,/tmp/user/*/aerc-* set noautoindent tw=78 filetype=mail spell
