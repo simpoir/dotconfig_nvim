@@ -33,16 +33,15 @@ Plug 'flazz/vim-colorschemes'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'mhinz/vim-signify'                  " like gitgutter for all
-Plug 'tpope/vim-fugitive'
-Plug 'liuchengxu/vim-which-key'
+Plug 'tpope/vim-fugitive'                 " git
+Plug 'liuchengxu/vim-which-key'           " the backslash menu
 
 "
 " Coding
 "
 Plug 'mhinz/vim-startify'
-Plug 'neovim/nvim-lspconfig'
-Plug 'nvim-lua/completion-nvim'
-Plug 'nvim-lua/diagnostic-nvim'
+Plug 'prabirshrestha/vim-lsp'
+Plug 'prabirshrestha/asyncomplete.vim'  " check perf
 
 Plug 'embear/vim-localvimrc'
 Plug 'janko-m/vim-test'
@@ -77,7 +76,6 @@ Plug 'tpope/vim-obsession'
 Plug 'mhinz/vim-grepper'
 Plug 'airblade/vim-rooter'
 Plug 'junkblocker/patchreview-vim'
-" Plug 'jaxbot/browserlink.vim'
 Plug 'sjl/gundo.vim'
 Plug 'kopischke/vim-fetch'
 Plug 'scrooloose/nerdtree'
@@ -117,19 +115,24 @@ let g:localvimrc_name = ['.lvimrc', '_vimrc_local.vim']
 "
 " LSP
 "
-" nvim lsp
-lua <<EOF
-local function on_attach(client, bufnr)
-  require'diagnostic'.on_attach(client, bufnr)
-  require'completion'.on_attach(client, bufnr)
-end
-require'nvim_lsp'.gopls.setup{on_attach=on_attach}
-require'nvim_lsp'.pyls.setup{on_attach=on_attach}
-require'nvim_lsp'.rust_analyzer.setup{on_attach=on_attach, capabilities={
-  textDocument = { completion = { completionItem = { snippetSupport = false}}}
-}}
-EOF
-" let g:diagnostic_enable_virtual_text = 0
+let g:lsp_log_file=''
+if executable('rust-analyzer')
+  cal lsp#register_server({
+        \ 'name': 'rust-analyzer',
+        \ 'cmd': {server_info->['rust-analyzer']},
+        \ 'allowlist': ['rust'],
+        \})
+endif
+if executable('pyls')
+  cal lsp#register_server({
+        \ 'name': 'pyls',
+        \ 'cmd': {server_info->['pyls']},
+        \ 'allowlist': ['python'],
+        \})
+endif
+set omnifunc=lsp#complete
+set signcolumn=yes
+
 
 
 "
@@ -182,15 +185,15 @@ let g:lmap = {'name': 'Global',
     \'g': [":Grepper -tool rg", 'Grep'],
     \},
   \'l': {'name': 'Language',
-    \'d': ["luaeval('vim.lsp.buf.definition()')", 'Definition'],
-    \'e': ["luaeval('vim.lsp.util.show_line_diagnostics()')", 'Errors'],
-    \'n': ["NextDiagnostic", 'Next Error'],
-    \'p': ["PrevDiagnostic", 'Prev Error'],
-    \'f': ["luaeval('vim.lsp.buf.formatting()')", "format"],
-    \'h': ["luaeval('vim.lsp.buf.hover()')", "hover"],
-    \'i': ["luaeval('vim.lsp.buf.implementation()')", 'Implementation'],
-    \'q': ["luaeval('vim.lsp.buf.code_action()')", 'Quick-fix'],
-    \'r': ["luaeval('vim.lsp.buf.rename()')", 'Rename symbol']
+    \'d': ["LspDefinition", 'Definition'],
+    \'e': ["LspDocumentDiagnostics", 'Errors'],
+    \'n': ["LspNextDiagnostic", 'Next Error'],
+    \'p': ["LspPrevDiagnostic", 'Prev Error'],
+    \'f': ["LspDocumentFormat", "format"],
+    \'h': ["LspHover", "hover"],
+    \'i': ["LspImplementation", 'Implementation'],
+    \'q': ["LspCodeActionSync", 'Quick-fix'],
+    \'r': ["LspRename", 'Rename symbol']
     \},
   \'t': {'name': 'Test',
     \'f': [':TestFile', 'Test file'],
@@ -201,7 +204,7 @@ let g:lmap = {'name': 'Global',
 
 augroup autoformat
   au!
-  au BufWritePre *.rs lua vim.lsp.buf.formatting_sync(nil, 1000)
+  au BufWritePre *.rs LspDocumentFormatSync
 augroup END
 
 set completeopt=menuone,noselect,noinsert
