@@ -116,24 +116,22 @@ let g:localvimrc_name = ['.lvimrc', '_vimrc_local.vim']
 " LSP
 "
 let g:lsp_log_file=''
-if executable('rust-analyzer')
-  cal lsp#register_server({
-        \ 'name': 'rust-analyzer',
-        \ 'cmd': {server_info->['rust-analyzer']},
-        \ 'allowlist': ['rust'],
-        \})
-endif
-if executable('pyls')
-  cal lsp#register_server({
-        \ 'name': 'pyls',
-        \ 'cmd': {server_info->['pyls']},
-        \ 'allowlist': ['python'],
-        \})
-endif
+func! s:lsp_reg(lang, cmd)
+  if executable(a:cmd[0])
+    cal lsp#register_server({
+          \ 'name': a:lang,
+          \ 'cmd': {server_info->a:cmd},
+          \ 'allowlist': [a:lang],
+          \})
+  endif
+endf
+cal s:lsp_reg('python', ['pyls'])
+cal s:lsp_reg('go', ['gopls'])
+cal s:lsp_reg('vim', ['vim-language-server', '--stdio'])
+cal s:lsp_reg('sh', ['bash-language-server', 'start'])
+cal s:lsp_reg('rust', ['rust-analyzer'])
 set omnifunc=lsp#complete
 set signcolumn=yes
-
-
 
 "
 " Edition
