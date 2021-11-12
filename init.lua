@@ -31,15 +31,10 @@ local g = vim.g
 local opt = vim.opt
 
 ----------------------------------------
--- Bootstrap packs
+-- Bootstrap Site Packs
 ----------------------------------------
-local fn = vim.fn
 local install_path = fn.stdpath("config") .. "/site/"
 opt.packpath:append(install_path)
-if #(fn.readdir(install_path.."pack/simpoir/opt/vim-startify")) == 0 then
-  print("initializing submodules")
-  fn.system({"git", "-C", install_path, "submodule", "update", "--init", "--recursive"})
-end
 
 ----------------------------------------
 -- Packages
@@ -96,18 +91,23 @@ local packs = {
   'mbbill/undotree';                   -- visual undo tree
   'kopischke/vim-fetch';               -- file:line remapper
 }
-opt.shortmess = "at"
+-- tiny package manager
 local breadcrumbs = fn.readdir(install_path.."pack/simpoir/opt")
-for _, p in pairs(packs) do
+for i, p in pairs(packs) do
   p = string.gsub(p, "^[^/]+/", "")
   -- lazy-ish loader
+  if #(fn.readdir(install_path.."pack/simpoir/opt/"..p)) == 0 then
+    print("["..i.."/"..#packs.."] Pulling submodule pack for "..p)
+    fn.system({"git", "-C", fn.stdpath("config"), "submodule", "update", "--init", "site/pack/simpoir/opt/"..p})
+  end
+  cmd("redrawstatus")
   print("loading pack "..p)
   cmd("packadd "..p)
-  cmd("redraw")
   for k, v in pairs(breadcrumbs) do
     if v == p then table.remove(breadcrumbs, k) end
   end
 end
+cmd "helptags ALL"
 if #breadcrumbs > 0 then
   local msg = "leftover packs: "
   for _, v in pairs(breadcrumbs) do
@@ -115,6 +115,7 @@ if #breadcrumbs > 0 then
   end
   print(msg)
 else
+  cmd("redraw")
   print("Happy vimming!")
 end
 
