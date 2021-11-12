@@ -1,3 +1,8 @@
-plugged
 .netrwhist
-autoload/plug.vim.old
+/black
+neovide-settings.json
+shada
+spell
+swap
+undo
+spell

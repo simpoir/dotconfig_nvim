@@ -1,0 +1,96 @@
+[submodule "site/pack/simpoir/opt/deb.vim"]
+	path = site/pack/simpoir/opt/deb.vim
+	url = https://github.com/knatsakis/deb.vim.git
+[submodule "site/pack/simpoir/opt/nvim-lspconfig"]
+	path = site/pack/simpoir/opt/nvim-lspconfig
+	url = https://github.com/neovim/nvim-lspconfig.git
+[submodule "site/pack/simpoir/opt/patchreview-vim"]
+	path = site/pack/simpoir/opt/patchreview-vim
+	url = https://github.com/junkblocker/patchreview-vim.git
+[submodule "site/pack/simpoir/opt/salt-vim"]
+	path = site/pack/simpoir/opt/salt-vim
+	url = https://github.com/saltstack/salt-vim.git
+[submodule "site/pack/simpoir/opt/todo.txt-vim"]
+	path = site/pack/simpoir/opt/todo.txt-vim
+	url = https://github.com/dbeniamine/todo.txt-vim.git
+[submodule "site/pack/simpoir/opt/undotree"]
+	path = site/pack/simpoir/opt/undotree
+	url = https://github.com/mbbill/undotree.git
+[submodule "site/pack/simpoir/opt/vim-airline"]
+	path = site/pack/simpoir/opt/vim-airline
+	url = https://github.com/vim-airline/vim-airline.git
+[submodule "site/pack/simpoir/opt/vim-airline-themes"]
+	path = site/pack/simpoir/opt/vim-airline-themes
+	url = https://github.com/vim-airline/vim-airline-themes.git
+[submodule "site/pack/simpoir/opt/vim-colorschemes"]
+	path = site/pack/simpoir/opt/vim-colorschemes
+	url = https://github.com/flazz/vim-colorschemes.git
+[submodule "site/pack/simpoir/opt/vim-commentary"]
+	path = site/pack/simpoir/opt/vim-commentary
+	url = https://github.com/tpope/vim-commentary.git
+[submodule "site/pack/simpoir/opt/vim-eighties"]
+	path = site/pack/simpoir/opt/vim-eighties
+	url = https://github.com/justincampbell/vim-eighties.git
+[submodule "site/pack/simpoir/opt/vim-extract-variable"]
+	path = site/pack/simpoir/opt/vim-extract-variable
+	url = https://github.com/fvictorio/vim-extract-variable.git
+[submodule "site/pack/simpoir/opt/vim-fetch"]
+	path = site/pack/simpoir/opt/vim-fetch
+	url = https://github.com/kopischke/vim-fetch.git
+[submodule "site/pack/simpoir/opt/vim-fish"]
+	path = site/pack/simpoir/opt/vim-fish
+	url = https://github.com/dag/vim-fish.git
+[submodule "site/pack/simpoir/opt/vim-grepper"]
+	path = site/pack/simpoir/opt/vim-grepper
+	url = https://github.com/mhinz/vim-grepper.git
+[submodule "site/pack/simpoir/opt/vim-isort"]
+	path = site/pack/simpoir/opt/vim-isort
+	url = https://github.com/fisadev/vim-isort.git
+[submodule "site/pack/simpoir/opt/Vim-Jinja2-Syntax"]
+	path = site/pack/simpoir/opt/Vim-Jinja2-Syntax
+	url = https://github.com/Glench/Vim-Jinja2-Syntax.git
+[submodule "site/pack/simpoir/opt/vim-jsx-pretty"]
+	path = site/pack/simpoir/opt/vim-jsx-pretty
+	url = https://github.com/maxmellon/vim-jsx-pretty.git
+[submodule "site/pack/simpoir/opt/vim-localvimrc"]
+	path = site/pack/simpoir/opt/vim-localvimrc
+	url = https://github.com/embear/vim-localvimrc.git
+[submodule "site/pack/simpoir/opt/vim-move"]
+	path = site/pack/simpoir/opt/vim-move
+	url = https://github.com/matze/vim-move.git
+[submodule "site/pack/simpoir/opt/vim-obsession"]
+	path = site/pack/simpoir/opt/vim-obsession
+	url = https://github.com/tpope/vim-obsession.git
+[submodule "site/pack/simpoir/opt/vim-python-pep8-indent"]
+	path = site/pack/simpoir/opt/vim-python-pep8-indent
+	url = https://github.com/Vimjas/vim-python-pep8-indent.git
+[submodule "site/pack/simpoir/opt/vim-rooter"]
+	path = site/pack/simpoir/opt/vim-rooter
+	url = https://github.com/airblade/vim-rooter.git
+[submodule "site/pack/simpoir/opt/vim-signify"]
+	path = site/pack/simpoir/opt/vim-signify
+	url = https://github.com/mhinz/vim-signify.git
+[submodule "site/pack/simpoir/opt/vim-sleuth"]
+	path = site/pack/simpoir/opt/vim-sleuth
+	url = https://github.com/tpope/vim-sleuth.git
+[submodule "site/pack/simpoir/opt/vim-startify"]
+	path = site/pack/simpoir/opt/vim-startify
+	url = https://github.com/mhinz/vim-startify.git
+[submodule "site/pack/simpoir/opt/vim-surround"]
+	path = site/pack/simpoir/opt/vim-surround
+	url = https://github.com/tpope/vim-surround.git
+[submodule "site/pack/simpoir/opt/vim-test"]
+	path = site/pack/simpoir/opt/vim-test
+	url = https://github.com/janko-m/vim-test.git
+[submodule "site/pack/simpoir/opt/vim-textobj-python"]
+	path = site/pack/simpoir/opt/vim-textobj-python
+	url = https://github.com/bps/vim-textobj-python.git
+[submodule "site/pack/simpoir/opt/vim-textobj-user"]
+	path = site/pack/simpoir/opt/vim-textobj-user
+	url = https://github.com/kana/vim-textobj-user.git
+[submodule "site/pack/simpoir/opt/vim-which-key"]
+	path = site/pack/simpoir/opt/vim-which-key
+	url = https://github.com/liuchengxu/vim-which-key.git
+[submodule "site/pack/simpoir/opt/black"]
+	path = site/pack/simpoir/opt/black
+	url = https://github.com/psf/black.git
