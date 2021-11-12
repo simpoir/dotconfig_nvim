@@ -97,7 +97,7 @@ local packs = {
   'kopischke/vim-fetch';               -- file:line remapper
 }
 opt.shortmess = "at"
-local breadcrumbs = fn.readdir(install_path)
+local breadcrumbs = fn.readdir(install_path.."pack/simpoir/opt")
 for _, p in pairs(packs) do
   p = string.gsub(p, "^[^/]+/", "")
   -- lazy-ish loader
