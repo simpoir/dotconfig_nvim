@@ -35,9 +35,9 @@ local opt = vim.opt
 ----------------------------------------
 local fn = vim.fn
 local install_path = fn.stdpath("data") .. "/site/pack/simpoir/opt/"
-if fn.empty(fn.readdir(install_path)) == 1 then
+if #(fn.readdir(install_path.."vim-startify")) == 0 then
   print("initializing submodules")
-  fn.system({"env", "--chdir", install_path, "git", "submodule", "update", "--depth=1"})
+  fn.system({"git", "-C", install_path, "submodule", "update", "--init", "--recursive"})
 end
 
 ----------------------------------------
@@ -114,7 +114,7 @@ if #breadcrumbs > 0 then
   end
   print(msg)
 else
-  print("Loaded packs")
+  print("Happy vimming!")
 end
 
 -- local optional packs
