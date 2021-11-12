@@ -34,8 +34,9 @@ local opt = vim.opt
 -- Bootstrap packs
 ----------------------------------------
 local fn = vim.fn
-local install_path = fn.stdpath("data") .. "/site/pack/simpoir/opt/"
-if #(fn.readdir(install_path.."vim-startify")) == 0 then
+local install_path = fn.stdpath("config") .. "/site/"
+opt.packpath:append(install_path)
+if #(fn.readdir(install_path.."pack/simpoir/opt/vim-startify")) == 0 then
   print("initializing submodules")
   fn.system({"git", "-C", install_path, "submodule", "update", "--init", "--recursive"})
 end

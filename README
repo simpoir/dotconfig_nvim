@@ -1,0 +1,4 @@
+This is my own vim config and selection of packs.
+It requires nvim v0.5 and above (sorry plain vim).
+
+To start, `git clone https://github.com/simpoir/dotconfig_nvim.git ~/.local/share/nvim`
