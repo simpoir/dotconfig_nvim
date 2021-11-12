@@ -167,13 +167,10 @@ opt.termguicolors = true
 ----------------------------------------
 -- Tooling
 ----------------------------------------
-
 g.localvimrc_persistent = 1
 g.localvimrc_name = {".lvimrc", "_vimrc_local.vim"}
 g.rooter_change_directory_for_non_project_files = "current" -- soothes LSP in home dir
-g.signify_vcs_cmds = {
-  bzr = "bzr diff --diff-options=-U0 -- %f"
-}
+g.signify_vcs_cmds = {bzr = "bzr diff --diff-options=-U0 -- %f"}
 
 ----------------------------------------
 -- LSP
@@ -182,7 +179,8 @@ local lspconfig = require("lspconfig")
 
 lspconfig.ltex.setup {
   cmd = { os.getenv("HOME").."/opt/ltex-ls-15.1.0/bin/ltex-ls" };
-  filetype = { "markdown", "rst", "tex" };
+  filetypes = { "markdown", "rst", "tex", "mail" };
+  single_file_support = true;
 }
 
 lspconfig.yamlls.setup{
