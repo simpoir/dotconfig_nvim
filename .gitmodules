@@ -94,3 +94,9 @@
 [submodule "site/pack/simpoir/opt/black"]
 	path = site/pack/simpoir/opt/black
 	url = https://github.com/psf/black.git
+[submodule "site/pack/simpoir/opt/fzf"]
+	path = site/pack/simpoir/opt/fzf
+	url = https://github.com/junegunn/fzf
+[submodule "site/pack/simpoir/opt/fzf.vim"]
+	path = site/pack/simpoir/opt/fzf.vim
+	url = https://github.com/junegunn/fzf.vim

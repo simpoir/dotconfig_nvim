@@ -82,8 +82,8 @@ local packs = {
 
   -- Tooling
   ----------------------------------------
-  --{'junegunn/fzf',  'dir': '~/.fzf', 'do': './install --all' };
-  --'junegunn/fzf.vim';
+  'junegunn/fzf';
+  'junegunn/fzf.vim';
   'tpope/vim-obsession';               -- auto session management
   'mhinz/vim-grepper';                 -- ag/rg/grep generic grepper
   'airblade/vim-rooter';               -- autochdir to repo
@@ -116,7 +116,6 @@ if #breadcrumbs > 0 then
   print(msg)
 else
   cmd("redraw")
-  print("Happy vimming!")
 end
 
 -- local optional packs
@@ -140,6 +139,10 @@ g.startify_custom_header = {
   '           "8   8I   8I  I8, ,8I  i8"    ,8I   Y8,   ,8P 88   I8   8I   8I   8I ',
   '                8I   Yb, `YbadP" ,d8,   ,d8"    Yb,_,dP_,88,_,dP   8I   8I   Yb,',
   '                8I   `Y8888P"Y888P"Y8888P"       "Y8P" 8P""Y88P:   8I   8I   `Y8',
+  '',
+  ' Type backslash for a visual list of keybinds.',
+  ' Happy Vimming!',
+
 }
 g.startify_bookmarks = {}
 g.startify_change_to_vcs_root = 1
