@@ -123,6 +123,8 @@ vim.cmd "packadd termdebug"
 g.termdebug_wide = 1
 g.termdebuger = "rust-gdb"
 
+-- compat
+opt.shell = "/bin/bash"
 
 ----------------------------------------
 -- Look and feel
