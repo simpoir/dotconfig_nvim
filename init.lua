@@ -69,6 +69,7 @@ local packs = {
   'dbeniamine/todo.txt-vim';
   'dag/vim-fish';
   'maxmellon/vim-jsx-pretty';
+  'folke/trouble.nvim',
 
   -- Edition
   ----------------------------------------
@@ -90,13 +91,19 @@ local packs = {
   'junkblocker/patchreview-vim';       -- side-by-side diff viewer
   'mbbill/undotree';                   -- visual undo tree
   'kopischke/vim-fetch';               -- file:line remapper
+  'kyazdani42/nvim-web-devicons';
 }
 -- tiny package manager
 local breadcrumbs = fn.readdir(install_path.."pack/simpoir/opt")
-for i, p in pairs(packs) do
-  p = string.gsub(p, "^[^/]+/", "")
+for i, pack in pairs(packs) do
+  p = string.gsub(pack, "^[^/]+/", "")
   -- lazy-ish loader
-  if #(fn.readdir(install_path.."pack/simpoir/opt/"..p)) == 0 then
+  local pack_dir = install_path.."pack/simpoir/opt/"..p;
+  if #(fn.glob(pack_dir)) == 0 then
+    print("["..i.."/"..#packs.."] Adding submodule pack for "..p)
+    print(fn.system({"git", "-C", fn.stdpath("config"), "submodule", "add", "https://github.com/"..pack, pack_dir}))
+  end
+  if #(fn.readdir(pack_dir)) == 0 then
     print("["..i.."/"..#packs.."] Pulling submodule pack for "..p)
     fn.system({"git", "-C", fn.stdpath("config"), "submodule", "update", "--init", "site/pack/simpoir/opt/"..p})
   end
@@ -175,6 +182,7 @@ opt.termguicolors = true
 g.localvimrc_persistent = 1
 g.localvimrc_name = {".lvimrc", "_vimrc_local.vim"}
 g.rooter_change_directory_for_non_project_files = "current" -- soothes LSP in home dir
+g.rooter_patterns = {".git", ".bzr", "Makefile", "Cargo.toml"}
 g.signify_vcs_cmds = {bzr = "bzr diff --diff-options=-U0 -- %f"}
 
 ----------------------------------------
