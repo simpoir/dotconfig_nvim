@@ -100,9 +100,9 @@
 [submodule "site/pack/simpoir/opt/fzf.vim"]
 	path = site/pack/simpoir/opt/fzf.vim
 	url = https://github.com/junegunn/fzf.vim
-[submodule "/home/simpoir/.config/nvim/site/pack/simpoir/opt/trouble.nvim"]
-	path = /home/simpoir/.config/nvim/site/pack/simpoir/opt/trouble.nvim
+[submodule "site/pack/simpoir/opt/trouble.nvim"]
+	path = site/pack/simpoir/opt/trouble.nvim
 	url = https://github.com/folke/trouble.nvim
-[submodule "/home/simpoir/.config/nvim/site/pack/simpoir/opt/nvim-web-devicons"]
-	path = /home/simpoir/.config/nvim/site/pack/simpoir/opt/nvim-web-devicons
+[submodule "site/pack/simpoir/opt/nvim-web-devicons"]
+	path = site/pack/simpoir/opt/nvim-web-devicons
 	url = https://github.com/kyazdani42/nvim-web-devicons
