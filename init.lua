@@ -109,7 +109,7 @@ for i, pack in pairs(packs) do
   end
   cmd("redrawstatus")
   print("loading pack "..p)
-  cmd("packadd "..p)
+  cmd("packadd! "..p) -- defered pack load post init, so config globals exist
   for k, v in pairs(breadcrumbs) do
     if v == p then table.remove(breadcrumbs, k) end
   end
@@ -194,6 +194,13 @@ lspconfig.ltex.setup {
   cmd = { os.getenv("HOME").."/opt/ltex-ls-15.1.0/bin/ltex-ls" };
   filetypes = { "markdown", "rst", "tex", "mail" };
   single_file_support = true;
+  settings = {
+    ltex = {
+      dictionary = {
+        ["en-US"] = fn.readfile(fn.stdpath("config").."/spell/en.utf-8.add");
+      }
+    }
+  };
 }
 
 lspconfig.yamlls.setup{
@@ -218,6 +225,7 @@ lspconfig.vimls.setup{
 }
 
 opt.omnifunc = "v:lua.vim.lsp.omnifunc"
+opt.completefunc = "v:lua.vim.lsp.omnifunc"
 opt.signcolumn = "yes"
 
 ----------------------------------------
@@ -255,7 +263,7 @@ g.lmap = {
     name = 'Language',
     d = {"luaeval('vim.lsp.buf.definition()')", 'Definition'},
     f = {"luaeval('vim.lsp.buf.formatting()')", "format"},
-    e = {"luaeval('vim.lsp.diagnostic.set_qflist()')", "Diagnostics"},
+    e = {"Trouble", "Diagnostics"},
     h = {"luaeval('vim.lsp.buf.hover()')", "hover"},
     i = {"luaeval('vim.lsp.buf.implementation()')", 'Implementation'},
     q = {"luaeval('vim.lsp.buf.code_action()')", 'Quick-fix'},
@@ -279,7 +287,11 @@ augroup autoformat
 au!
 au BufWritePre *.rs lua vim.lsp.buf.formatting()
 au BufWritePre *.go lua vim.lsp.buf.formatting()
+" autoformat emails
+au BufRead *.eml set fo+=anw tw=76
+filetype plugin off
 augroup END
+command WriteAsRoot %!SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %
 ]]
 
 function Alternate()
