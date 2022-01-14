@@ -106,3 +106,6 @@
 [submodule "site/pack/simpoir/opt/nvim-web-devicons"]
 	path = site/pack/simpoir/opt/nvim-web-devicons
 	url = https://github.com/kyazdani42/nvim-web-devicons
+[submodule "lsp_signature"]
+	path = site/pack/simpoir/opt/lsp_signature.nvim
+	url = https://github.com/ray-x/lsp_signature.nvim

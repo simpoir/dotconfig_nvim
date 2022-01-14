@@ -53,11 +53,10 @@ local packs = {
   ----------------------------------------
   'mhinz/vim-startify';
   'neovim/nvim-lspconfig';             -- common configs for LSP
-  -- Plug 'dense-analysis/ale';                 -- static analyzer
-  -- Plug 'rhysd/vim-lsp-ale';
   'embear/vim-localvimrc';             -- .lvimrc support
   'janko-m/vim-test';                  -- generic test runner
   'Vimjas/vim-python-pep8-indent';
+  'ray-x/lsp_signature.nvim';          -- the nice floating preview with highlights
 
   -- Syntax
   ----------------------------------------
@@ -95,21 +94,24 @@ local packs = {
 }
 -- tiny package manager
 local breadcrumbs = fn.readdir(install_path.."pack/simpoir/opt")
+local has_errors = false
 for i, pack in pairs(packs) do
-  p = string.gsub(pack, "^[^/]+/", "")
+  local p = string.gsub(pack, "^[^/]+/", "")
   -- lazy-ish loader
   local pack_dir = install_path.."pack/simpoir/opt/"..p;
   if #(fn.glob(pack_dir)) == 0 then
     print("["..i.."/"..#packs.."] Adding submodule pack for "..p)
-    print(fn.system({"git", "-C", fn.stdpath("config"), "submodule", "add", "https://github.com/"..pack, pack_dir}))
+    print(fn.system({"git", "-C", fn.stdpath("config"), "submodule", "add", "--force", "https://github.com/"..pack, pack_dir}))
   end
   if #(fn.readdir(pack_dir)) == 0 then
     print("["..i.."/"..#packs.."] Pulling submodule pack for "..p)
     fn.system({"git", "-C", fn.stdpath("config"), "submodule", "update", "--init", "site/pack/simpoir/opt/"..p})
   end
-  cmd("redrawstatus")
+  if not has_errors then cmd("redrawstatus") end
   print("loading pack "..p)
-  cmd("packadd! "..p) -- defered pack load post init, so config globals exist
+  if not pcall(cmd, "packadd! "..p) then -- lazy pack load, so config globals are initialized
+    has_errors = true
+  end
   for k, v in pairs(breadcrumbs) do
     if v == p then table.remove(breadcrumbs, k) end
   end
@@ -122,7 +124,7 @@ if #breadcrumbs > 0 then
   end
   print(msg)
 else
-  cmd("redraw")
+  if not has_errors then cmd("redraw") end
 end
 
 -- local optional packs
@@ -175,6 +177,7 @@ opt.list = true
 opt.mouse = ""
 opt.number = true
 opt.termguicolors = true
+opt.completeopt = "noinsert,menuone,noselect"
 
 ----------------------------------------
 -- Tooling
@@ -189,6 +192,10 @@ g.signify_vcs_cmds = {bzr = "bzr diff --diff-options=-U0 -- %f"}
 -- LSP
 ----------------------------------------
 local lspconfig = require("lspconfig")
+
+require"lsp_signature".setup{
+  zindex = 1,
+}
 
 lspconfig.ltex.setup {
   cmd = { os.getenv("HOME").."/opt/ltex-ls-15.1.0/bin/ltex-ls" };
@@ -213,6 +220,24 @@ lspconfig.yamlls.setup{
   }
 }
 
+lspconfig.sumneko_lua.setup{
+  cmd = {os.getenv("HOME").."/opt/lua-language-server/bin/lua-language-server", "-E", os.getenv("HOME").."/opt/lua-language-server/main.lua"};
+  settings = {
+    Lua = {
+      runtime = {
+        version = "LuaJIT",
+      },
+      diagnostics = {
+        globals = {"vim"},
+      },
+      workspace = {
+        library = vim.api.nvim_get_runtime_file("", true),
+      },
+      telemetry = { enable = false },
+    }
+  }
+}
+
 lspconfig.pylsp.setup{
   cmd = { "pyls" }
 }
@@ -227,6 +252,7 @@ lspconfig.vimls.setup{
 opt.omnifunc = "v:lua.vim.lsp.omnifunc"
 opt.completefunc = "v:lua.vim.lsp.omnifunc"
 opt.signcolumn = "yes"
+
 
 ----------------------------------------
 -- Edition
@@ -285,11 +311,11 @@ vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", {noremap=t
 cmd [[
 augroup autoformat
 au!
-au BufWritePre *.rs lua vim.lsp.buf.formatting()
-au BufWritePre *.go lua vim.lsp.buf.formatting()
+au BufWritePre *.rs lua vim.lsp.buf.formatting_sync()
+au BufWritePre *.go lua vim.lsp.buf.formatting_sync()
 " autoformat emails
 au BufRead *.eml set fo+=anw tw=76
-filetype plugin off
+au FileType python setlocal omnifunc=v:lua.vim.lsp.omnifunc
 augroup END
 command WriteAsRoot %!SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %
 ]]
@@ -307,9 +333,11 @@ function Alternate()
     if fn.match(fn.expand('%:p'), '_test.go$') ~= -1 then
       cmd("edit "..fn.fnameescape(fn.substitute(fn.expand('%:p'), '_test.go$', '.go', '')))
     else
-      fmd("edit "..fn.fnameescape(fn.substitute(fn.expand('%:p'), '.go$', '_test.go', '')))
+      cmd("edit "..fn.fnameescape(fn.substitute(fn.expand('%:p'), '.go$', '_test.go', '')))
     end
   else
     print("no defined alt for this filetype: ".. filetype);
   end
 end
+
+
