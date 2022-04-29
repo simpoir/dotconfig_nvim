@@ -109,3 +109,6 @@
 [submodule "lsp_signature"]
 	path = site/pack/simpoir/opt/lsp_signature.nvim
 	url = https://github.com/ray-x/lsp_signature.nvim
+[submodule "/home/simpoir/.config/nvim/site/pack/simpoir/opt/detectindent"]
+	path = /home/simpoir/.config/nvim/site/pack/simpoir/opt/detectindent
+	url = https://github.com/ciaranm/detectindent

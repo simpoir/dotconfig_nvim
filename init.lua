@@ -282,7 +282,7 @@ g.lmap = {
     name = 'Files',
     a = {'v:lua.Alternate()', 'jump to Alternate file.'},
     d = {':e $MYVIMRC', 'Open dotfile'},
-    f = {"fzf#vim#files('', fzf#vim#with_preview({'source': 'rg --files'}), 0)", 'Find file'},
+    f = {"fzf#vim#files('', fzf#vim#with_preview({'source': 'rg --files -g \"!*.pyc\"'}), 0)", 'Find file'},
     g = {":Grepper -tool rg", 'Grep'},
   },
   l = {
@@ -316,6 +316,8 @@ au BufWritePre *.go lua vim.lsp.buf.formatting_sync()
 " autoformat emails
 au BufRead *.eml set fo+=anw tw=76
 au FileType python setlocal omnifunc=v:lua.vim.lsp.omnifunc
+" fixes python default double indent
+au FileType python let g:pyindent_open_paren=shiftwidth()
 augroup END
 command WriteAsRoot %!SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %
 ]]
