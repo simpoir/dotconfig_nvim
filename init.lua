@@ -85,6 +85,7 @@ local packs = {
   'junegunn/fzf';
   'junegunn/fzf.vim';
   'tpope/vim-obsession';               -- auto session management
+  'tpope/vim-fugitive';                    -- git commands
   'mhinz/vim-grepper';                 -- ag/rg/grep generic grepper
   'airblade/vim-rooter';               -- autochdir to repo
   'junkblocker/patchreview-vim';       -- side-by-side diff viewer
