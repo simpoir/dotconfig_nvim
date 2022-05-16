@@ -91,7 +91,8 @@ local packs = {
   'junkblocker/patchreview-vim';       -- side-by-side diff viewer
   'mbbill/undotree';                   -- visual undo tree
   'kopischke/vim-fetch';               -- file:line remapper
-  'kyazdani42/nvim-web-devicons';
+  'scrooloose/nerdtree';               -- file tree
+  'ryanoasis/vim-devicons';            -- file tree icons
 }
 -- tiny package manager
 local breadcrumbs = fn.readdir(install_path.."pack/simpoir/opt")
@@ -99,12 +100,13 @@ local has_errors = false
 for i, pack in pairs(packs) do
   local p = string.gsub(pack, "^[^/]+/", "")
   -- lazy-ish loader
-  local pack_dir = install_path.."pack/simpoir/opt/"..p;
-  if #(fn.glob(pack_dir)) == 0 then
+  local pack_dir = "pack/simpoir/opt/"..p;
+  local abs_pack_dir = install_path..pack_dir;
+  if #(fn.glob(abs_pack_dir)) == 0 then
     print("["..i.."/"..#packs.."] Adding submodule pack for "..p)
     print(fn.system({"git", "-C", fn.stdpath("config"), "submodule", "add", "--force", "https://github.com/"..pack, pack_dir}))
   end
-  if #(fn.readdir(pack_dir)) == 0 then
+  if #(fn.readdir(abs_pack_dir)) == 0 then
     print("["..i.."/"..#packs.."] Pulling submodule pack for "..p)
     fn.system({"git", "-C", fn.stdpath("config"), "submodule", "update", "--init", "site/pack/simpoir/opt/"..p})
   end

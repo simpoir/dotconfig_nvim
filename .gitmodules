@@ -112,3 +112,9 @@
 [submodule "vim-fugitive"]
 	path = site/pack/simpoir/opt/vim-fugitive
 	url = https://github.com/tpope/vim-fugitive
+[submodule "pack/simpoir/opt/nerdtree"]
+	path = pack/simpoir/opt/nerdtree
+	url = https://github.com/scrooloose/nerdtree
+[submodule "pack/simpoir/opt/vim-devicons"]
+	path = pack/simpoir/opt/vim-devicons
+	url = https://github.com/ryanoasis/vim-devicons
