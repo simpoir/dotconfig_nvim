@@ -93,6 +93,7 @@ local packs = {
   'kopischke/vim-fetch';               -- file:line remapper
   'scrooloose/nerdtree';               -- file tree
   'ryanoasis/vim-devicons';            -- file tree icons
+  'majutsushi/tagbar';                 -- taglist panel
 }
 -- tiny package manager
 local breadcrumbs = fn.readdir(install_path.."pack/simpoir/opt")
@@ -104,7 +105,7 @@ for i, pack in pairs(packs) do
   local abs_pack_dir = install_path..pack_dir;
   if #(fn.glob(abs_pack_dir)) == 0 then
     print("["..i.."/"..#packs.."] Adding submodule pack for "..p)
-    print(fn.system({"git", "-C", fn.stdpath("config"), "submodule", "add", "--force", "https://github.com/"..pack, pack_dir}))
+    print(fn.system({"git", "-C", fn.stdpath("config"), "submodule", "add", "--force", "https://github.com/"..pack, "site/"..pack_dir}))
   end
   if #(fn.readdir(abs_pack_dir)) == 0 then
     print("["..i.."/"..#packs.."] Pulling submodule pack for "..p)
@@ -166,6 +167,7 @@ g.startify_lists = {
   { type = 'dir',       header = {'   MRU '.. fn.getcwd()} },
   { type = 'commands',  header = {'   Commands'}           },
 }
+g.eighties_bufname_additional_patterns = {'__Tagbar__'}
 
 cmd "colo space-vim-dark"
 cmd "au BufRead * set cursorline"
