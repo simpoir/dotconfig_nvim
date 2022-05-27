@@ -85,7 +85,7 @@ local packs = {
   'junegunn/fzf';
   'junegunn/fzf.vim';
   'tpope/vim-obsession';               -- auto session management
-  'tpope/vim-fugitive';                    -- git commands
+  'tpope/vim-fugitive';                -- git commands
   'mhinz/vim-grepper';                 -- ag/rg/grep generic grepper
   'airblade/vim-rooter';               -- autochdir to repo
   'junkblocker/patchreview-vim';       -- side-by-side diff viewer
@@ -130,6 +130,12 @@ if #breadcrumbs > 0 then
 else
   if not has_errors then cmd("redraw") end
 end
+
+function PlugUp()
+  print("this is gonna take a while")
+  print(fn.system({"git", "-C", fn.stdpath("config"), "submodule", "update", "--remote"}))
+end
+vim.cmd "command PlugUp lua PlugUp()"
 
 -- local optional packs
 vim.cmd "packadd termdebug"
@@ -288,6 +294,7 @@ g.lmap = {
   f = {
     name = 'Files',
     a = {'v:lua.Alternate()', 'jump to Alternate file.'},
+    c = {'v:lua.BufGone()', 'Close buffer and switch to next'},
     d = {':e $MYVIMRC', 'Open dotfile'},
     f = {"fzf#vim#files('', fzf#vim#with_preview({'source': 'rg --files -g \"!*.pyc\"'}), 0)", 'Find file'},
     g = {":Grepper -tool rg", 'Grep'},
@@ -350,3 +357,7 @@ function Alternate()
 end
 
 
+function BufGone()
+  cmd("bn")
+  cmd("bd#")
+end
