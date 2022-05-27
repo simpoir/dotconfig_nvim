@@ -175,6 +175,7 @@ cmd "au BufRead * set cursorline"
 g.neovide_cursor_vfx_mode = "railgun"
 g.neovide_refresh_rate = 20
 g.airline_powerline_fonts = 1
+g["airline#extensions#tabline#enabled"] = 1
 
 opt.colorcolumn = "80"
 opt.guifont = "FuraCode Nerd Font Mono:h10"
