@@ -217,7 +217,8 @@ lspconfig.ltex.setup {
 }
 
 lspconfig.yamlls.setup{
-  cmd = { "node", os.getenv("HOME").."/node_modules/.bin/yaml-language-server", "--stdio" },
+  -- from snap
+  cmd = { "yaml-language-server", "--stdio" },
   settings = {
     redhat = { telemetry = { enabled = false } },
     yaml = { schemas = {
