@@ -55,7 +55,7 @@ local packs = {
   'neovim/nvim-lspconfig';             -- common configs for LSP
   'embear/vim-localvimrc';             -- .lvimrc support
   'janko-m/vim-test';                  -- generic test runner
-  'Vimjas/vim-python-pep8-indent';
+  {'jeetsukumaran/vim-python-indent-black', eager=true};
   'ray-x/lsp_signature.nvim';          -- the nice floating preview with highlights
 
   -- Syntax
@@ -99,6 +99,12 @@ local packs = {
 local breadcrumbs = fn.readdir(install_path.."pack/simpoir/opt")
 local has_errors = false
 for i, pack in pairs(packs) do
+  local eager = false
+  if type(pack) == "table" then
+    local pack_opt = pack
+    pack = pack[1]
+    eager = pack_opt["eager"]
+  end
   local p = string.gsub(pack, "^[^/]+/", "")
   -- lazy-ish loader
   local pack_dir = "pack/simpoir/opt/"..p;
@@ -113,6 +119,9 @@ for i, pack in pairs(packs) do
   end
   if not has_errors then cmd("redrawstatus") end
   print("loading pack "..p)
+  if eager then
+    cmd("set runtimepath^="..abs_pack_dir)
+  end
   if not pcall(cmd, "packadd! "..p) then -- lazy pack load, so config globals are initialized
     has_errors = true
   end
@@ -136,6 +145,9 @@ function PlugUp()
   print(fn.system({"git", "-C", fn.stdpath("config"), "submodule", "update", "--remote"}))
 end
 vim.cmd "command PlugUp lua PlugUp()"
+
+-- needs to be after packadd
+cmd "filetype plugin indent on"
 
 -- local optional packs
 vim.cmd "packadd termdebug"
@@ -330,8 +342,6 @@ au BufWritePre *.go lua vim.lsp.buf.formatting_sync()
 " autoformat emails
 au BufRead *.eml set fo+=anw tw=76
 au FileType python setlocal omnifunc=v:lua.vim.lsp.omnifunc
-" fixes python default double indent
-au FileType python let g:pyindent_open_paren=shiftwidth()
 augroup END
 command WriteAsRoot %!SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %
 ]]
