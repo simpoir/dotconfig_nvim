@@ -45,6 +45,7 @@ local packs = {
   'flazz/vim-colorschemes';
   'vim-airline/vim-airline';
   'vim-airline/vim-airline-themes';
+  'kyazdani42/nvim-web-devicons';
   'mhinz/vim-signify';                 -- like gitgutter for all
   'liuchengxu/vim-which-key';          -- the backslash menu
   'justincampbell/vim-eighties';       -- auto 80col resizer
@@ -198,7 +199,7 @@ g["airline#extensions#tabline#enabled"] = 1
 opt.colorcolumn = "80"
 opt.guifont = "FuraCode Nerd Font Mono:h10"
 opt.list = true
-opt.mouse = ""
+opt.mouse = "a"
 opt.number = true
 opt.termguicolors = true
 opt.completeopt = "noinsert,menuone,noselect"
@@ -240,7 +241,8 @@ lspconfig.yamlls.setup{
   settings = {
     redhat = { telemetry = { enabled = false } },
     yaml = { schemas = {
-      ["https://ghcdn.rawgit.org/techhat/openrecipeformat/master/schema.json"] = "*.orf.yml",
+      ["https://cdn.jsdelivr.net/gh/techhat/openrecipeformat/schema.json"] = "*.orf.yml",
+      ["https://cdn.jsdelivr.net/gh/cappyzawa/concourse-pipeline-jsonschema@v6.5.0/concourse_jsonschema.json"] = "pipeline.yml",
     } },
   }
 }
@@ -273,6 +275,7 @@ lspconfig.rust_analyzer.setup{
 lspconfig.vimls.setup{
   cmd = {"node", os.getenv("HOME").."/node_modules/.bin/vim-language-server", "--stdio"}
 }
+lspconfig.gopls.setup{}
 
 opt.omnifunc = "v:lua.vim.lsp.omnifunc"
 opt.completefunc = "v:lua.vim.lsp.omnifunc"
