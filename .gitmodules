@@ -31,9 +31,6 @@
 [submodule "site/pack/simpoir/opt/vim-eighties"]
 	path = site/pack/simpoir/opt/vim-eighties
 	url = https://github.com/justincampbell/vim-eighties
-[submodule "site/pack/simpoir/opt/vim-extract-variable"]
-	path = site/pack/simpoir/opt/vim-extract-variable
-	url = https://github.com/fvictorio/vim-extract-variable
 [submodule "site/pack/simpoir/opt/vim-fetch"]
 	path = site/pack/simpoir/opt/vim-fetch
 	url = https://github.com/kopischke/vim-fetch
@@ -79,12 +76,6 @@
 [submodule "site/pack/simpoir/opt/vim-test"]
 	path = site/pack/simpoir/opt/vim-test
 	url = https://github.com/janko-m/vim-test
-[submodule "site/pack/simpoir/opt/vim-textobj-python"]
-	path = site/pack/simpoir/opt/vim-textobj-python
-	url = https://github.com/bps/vim-textobj-python
-[submodule "site/pack/simpoir/opt/vim-textobj-user"]
-	path = site/pack/simpoir/opt/vim-textobj-user
-	url = https://github.com/kana/vim-textobj-user
 [submodule "site/pack/simpoir/opt/vim-which-key"]
 	path = site/pack/simpoir/opt/vim-which-key
 	url = https://github.com/liuchengxu/vim-which-key
@@ -106,12 +97,6 @@
 [submodule "site/pack/simpoir/opt/lsp_signature"]
 	path = site/pack/simpoir/opt/lsp_signature.nvim
 	url = https://github.com/ray-x/lsp_signature.nvim
-[submodule "site/pack/simpoir/opt/nerdtree"]
-	path = site/pack/simpoir/opt/nerdtree
-	url = https://github.com/scrooloose/nerdtree
-[submodule "site/pack/simpoir/opt/vim-devicons"]
-	path = site/pack/simpoir/opt/vim-devicons
-	url = https://github.com/ryanoasis/vim-devicons
 [submodule "site/pack/simpoir/opt/tagbar"]
 	path = site/pack/simpoir/opt/tagbar
 	url = https://github.com/majutsushi/tagbar
@@ -124,3 +109,27 @@
 [submodule "site/pack/simpoir/opt/vim-python-indent-black"]
 	path = site/pack/simpoir/opt/vim-python-indent-black
 	url = https://github.com/jeetsukumaran/vim-python-indent-black
+[submodule "site/pack/simpoir/opt/nvim-autopairs"]
+	path = site/pack/simpoir/opt/nvim-autopairs
+	url = https://github.com/windwp/nvim-autopairs
+[submodule "site/pack/simpoir/opt/NeoDebug"]
+	path = site/pack/simpoir/opt/NeoDebug
+	url = https://github.com/wordijp/NeoDebug
+[submodule "site/pack/simpoir/opt/nvim-dap"]
+	path = site/pack/simpoir/opt/nvim-dap
+	url = https://github.com/mfussenegger/nvim-dap
+[submodule "site/pack/simpoir/opt/nvim-treesitter"]
+	path = site/pack/simpoir/opt/nvim-treesitter
+	url = https://github.com/nvim-treesitter/nvim-treesitter
+[submodule "site/pack/simpoir/opt/nvim-treesitter-pairs"]
+	path = site/pack/simpoir/opt/nvim-treesitter-pairs
+	url = https://github.com/theHamsta/nvim-treesitter-pairs
+[submodule "site/pack/simpoir/opt/nvim-treesitter-textobjects"]
+	path = site/pack/simpoir/opt/nvim-treesitter-textobjects
+	url = https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+[submodule "site/pack/simpoir/opt/nvim-tree.lua"]
+	path = site/pack/simpoir/opt/nvim-tree.lua
+	url = https://github.com/kyazdani42/nvim-tree.lua
+[submodule "site/pack/simpoir/opt/jqno-extractvariable.vim"]
+	path = site/pack/simpoir/opt/jqno-extractvariable.vim
+	url = https://github.com/jqno/jqno-extractvariable.vim

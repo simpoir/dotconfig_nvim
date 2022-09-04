@@ -1,7 +1,7 @@
 -- ==================================================
 -- Simpoir's unfriendly but convenient nvim config
 --
--- For Neovim 0.5.0+
+-- For Neovim 0.7.0+
 --
 -- Copyright (c) 2019-2021 Simon Poirier
 --
@@ -62,24 +62,26 @@ local packs = {
   -- Syntax
   ----------------------------------------
   'knatsakis/deb.vim';                 -- support for xz
-  'kana/vim-textobj-user';
-  'bps/vim-textobj-python';
   'saltstack/salt-vim';
   'Glench/Vim-Jinja2-Syntax';
   'dbeniamine/todo.txt-vim';
   'dag/vim-fish';
   'maxmellon/vim-jsx-pretty';
-  'folke/trouble.nvim',
+  'folke/trouble.nvim';
+  'nvim-treesitter/nvim-treesitter';
+  'nvim-treesitter/nvim-treesitter-textobjects';
+  'theHamsta/nvim-treesitter-pairs';
 
   -- Edition
   ----------------------------------------
   'tpope/vim-sleuth';                  -- auto shiftwidth
   'matze/vim-move';                    -- alt-arrow line moving
-  'fvictorio/vim-extract-variable';
+  'jqno/jqno-extractvariable.vim';
   'tpope/vim-surround';
   'tpope/vim-commentary';
   'psf/black';
   'fisadev/vim-isort';
+  'windwp/nvim-autopairs';
 
   -- Tooling
   ----------------------------------------
@@ -92,9 +94,10 @@ local packs = {
   'junkblocker/patchreview-vim';       -- side-by-side diff viewer
   'mbbill/undotree';                   -- visual undo tree
   'kopischke/vim-fetch';               -- file:line remapper
-  'scrooloose/nerdtree';               -- file tree
-  'ryanoasis/vim-devicons';            -- file tree icons
+  'kyazdani42/nvim-tree.lua';          -- file tree
+  'kyazdani42/nvim-web-devicons';      -- file tree
   'majutsushi/tagbar';                 -- taglist panel
+  'mfussenegger/nvim-dap';             -- debug adapter protocol
 }
 -- tiny package manager
 local breadcrumbs = fn.readdir(install_path.."pack/simpoir/opt")
@@ -147,14 +150,6 @@ function PlugUp()
 end
 vim.cmd "command PlugUp lua PlugUp()"
 
--- needs to be after packadd
-cmd "filetype plugin indent on"
-
--- local optional packs
-vim.cmd "packadd termdebug"
-g.termdebug_wide = 1
-g.termdebuger = "rust-gdb"
-
 -- compat
 opt.shell = "/bin/bash"
 
@@ -188,7 +183,7 @@ g.startify_lists = {
 }
 g.eighties_bufname_additional_patterns = {'__Tagbar__'}
 
-cmd "colo space-vim-dark"
+cmd "colo molokai"
 cmd "au BufRead * set cursorline"
 
 g.neovide_cursor_vfx_mode = "railgun"
@@ -197,12 +192,14 @@ g.airline_powerline_fonts = 1
 g["airline#extensions#tabline#enabled"] = 1
 
 opt.colorcolumn = "80"
-opt.guifont = "FuraCode Nerd Font Mono:h10"
+opt.guifont = "FuraCode Nerd Font:h9"
 opt.list = true
 opt.mouse = "a"
 opt.number = true
 opt.termguicolors = true
 opt.completeopt = "noinsert,menuone,noselect"
+-- disable built-in pair in favor of treesitter
+opt.matchpairs = ""
 
 ----------------------------------------
 -- Tooling
@@ -212,6 +209,12 @@ g.localvimrc_name = {".lvimrc", "_vimrc_local.vim"}
 g.rooter_change_directory_for_non_project_files = "current" -- soothes LSP in home dir
 g.rooter_patterns = {".git", ".bzr", "Makefile", "Cargo.toml"}
 g.signify_vcs_cmds = {bzr = "bzr diff --diff-options=-U0 -- %f"}
+
+require"nvim-tree".setup {
+  open_on_setup = true,
+  open_on_setup_file = true,
+  ignore_buffer_on_setup = true,
+}
 
 ----------------------------------------
 -- LSP
@@ -285,8 +288,8 @@ opt.signcolumn = "yes"
 ----------------------------------------
 -- Edition
 ----------------------------------------
-opt.autoindent = true
-opt.smartindent = true
+-- opt.autoindent = true
+-- opt.smartindent = true
 
 ----------------------------------------
 -- Pretty Mappings
@@ -294,6 +297,7 @@ opt.smartindent = true
 fn["which_key#register"]("Leader", "g:lmap")
 vim.api.nvim_set_keymap("n", "<leader>", "<cmd>WhichKey 'Leader'<CR>", {noremap=true, silent=true})
 vim.api.nvim_set_keymap("v", "<leader>", "<cmd>WhichKeyVisual 'Leader'<CR>", {noremap=true, silent=true})
+vim.api.nvim_set_keymap("v", "<leader>ev", "<Plug>(extractVariableVisual)", {noremap=true, silent=true})
 g.lmap = {
   name = 'Global',
   c = {
@@ -302,9 +306,11 @@ g.lmap = {
   },
   d = {
     name = 'Debug',
-    b = {':Break', 'Break'},
-    d = {':Termdebug', 'Debug'},
-    c = {':Clear', 'Clear breakpoint'}
+    b = {"luaeval('require\"dap\".toggle_breakpoint()')", 'Break'},
+    n = {"luaeval('require\"dap\".step_over()')", 'Next'},
+    x = {"luaeval('require\"dap\".repl.open()')", 'Eval'},
+    c = {"luaeval('require\"dap\".continue()')", 'Continue'},
+    t = {'v:lua.DbgRustTests()', 'Debug tests'},
   },
   f = {
     name = 'Files',
@@ -374,3 +380,96 @@ function BufGone()
   cmd("bn")
   cmd("bd#")
 end
+
+function DbgRustTests()
+  local dap = require('dap')
+  local tgt = fn.system({"sh", "-c", "cargo build -q --tests --message-format=json|jq -r 'select(.executable).executable'"}):gsub("\n$", "")
+  local modname = fn.expand("%:r"):gsub("/", "::"):gsub("^src::", "")
+  -- cmd("TermdebugCommand "..tgt.." --nocapture "..modname)
+  dap.configurations.rust[1].program = tgt
+  dap.configurations.rust[1].args = {modname}
+  dap.continue()
+end
+cmd "command DbgRustTests lua DbgRustTests()"
+
+local dap = require('dap')
+dap.adapters.lldb = {
+  type = 'executable',
+  command = '/usr/bin/lldb-vscode-14',
+  name = 'lldb'
+}
+dap.configurations.rust = {
+  {
+    name = 'Launch',
+    type = 'lldb',
+    request = 'launch',
+    program = function()
+      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+    end,
+    cwd = '${workspaceFolder}',
+    stopOnEntry = false,
+    args = {},
+  },
+}
+
+
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = { "c", "lua", "python", "rust"},
+  sync_install = false,
+  auto_install = true,
+  autopairs = {
+    enable = true,
+  },
+  highlight = {
+    enable = true,
+  },
+  indent = {
+    enable =true,
+  },
+  pairs = {
+    enable = true,
+    -- disable = {},
+    highlight_pair_events = {"CursorMoved"},
+    highlight_self = false,
+    delete_balanced = {
+      only_on_first_char = false,
+      fallback_cmd_normal = nil,
+      longest_partner = false
+    },
+    keymaps = {
+      goto_partner = "%",
+      delete_balanced = "X",
+    },
+  },
+  textobjects = {
+    select = {
+      enable = true,
+
+      -- Automatically jump forward to textobj, similar to targets.vim
+      lookahead = true,
+
+      keymaps = {
+        -- You can use the capture groups defined in textobjects.scm
+        ["af"] = "@function.outer",
+        ["if"] = "@function.inner",
+        ["ac"] = "@class.outer",
+        -- you can optionally set descriptions to the mappings (used in the desc parameter of nvim_buf_set_keymap
+        ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
+      },
+      -- You can choose the select mode (default is charwise 'v')
+      selection_modes = {
+        ['@parameter.outer'] = 'v', -- charwise
+        ['@function.outer'] = 'V', -- linewise
+        ['@class.outer'] = '<c-v>', -- blockwise
+      },
+      -- If you set this to `true` (default is `false`) then any textobject is
+      -- extended to include preceding xor succeeding whitespace. Succeeding
+      -- whitespace has priority in order to act similarly to eg the built-in
+      -- `ap`.
+      -- include_surrounding_whitespace = true,
+    },
+  },
+}
+require'nvim-autopairs'.setup {
+  check_ts = true,
+}
