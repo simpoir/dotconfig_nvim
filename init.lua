@@ -58,6 +58,13 @@ local packs = {
   'janko-m/vim-test';                  -- generic test runner
   {'jeetsukumaran/vim-python-indent-black', eager=true};
   'ray-x/lsp_signature.nvim';          -- the nice floating preview with highlights
+  'hrsh7th/cmp-nvim-lsp';
+  'hrsh7th/cmp-path';
+  'hrsh7th/cmp-buffer';
+  'hrsh7th/cmp-cmdline';
+  'hrsh7th/cmp-vsnip';
+  'hrsh7th/vim-vsnip';
+  'hrsh7th/nvim-cmp';
 
   -- Syntax
   ----------------------------------------
@@ -157,22 +164,21 @@ opt.shell = "/bin/bash"
 -- Look and feel
 ----------------------------------------
 
-g.startify_custom_header = {
-  '                                          ,ggg,         ,gg                     ',
-  '                                         dP""Y8a       ,8P                      ',
-  '                                         Yb, `88       d8"                      ',
-  '                                          `"  88       88gg                     ',
-  '                                              88       88""                     ',
-  '            ,ggg,,ggg,    ,ggg,     ,ggggg,   I8       8Igg    ,ggg,,ggg,,ggg,  ',
-  '           ,8" "8P" "8,  i8" "8i   dP"  "Y8ggg`8,     ,8"88   ,8" "8P" "8P" "8, ',
-  '           "8   8I   8I  I8, ,8I  i8"    ,8I   Y8,   ,8P 88   I8   8I   8I   8I ',
-  '                8I   Yb, `YbadP" ,d8,   ,d8"    Yb,_,dP_,88,_,dP   8I   8I   Yb,',
-  '                8I   `Y8888P"Y888P"Y8888P"       "Y8P" 8P""Y88P:   8I   8I   `Y8',
+g.startify_custom_header = vim.api.nvim_call_function("startify#center", {{
+  '                               ,ggg,         ,gg                     ',
+  '                              dP""Y8a       ,8P                      ',
+  '                              Yb, `88       d8"                      ',
+  '                               `"  88       88gg                     ',
+  '                                   88       88""                     ',
+  ' ,ggg,,ggg,    ,ggg,     ,ggggg,   I8       8Igg    ,ggg,,ggg,,ggg,  ',
+  ',8" "8P" "8,  i8" "8i   dP"  "Y8ggg`8,     ,8"88   ,8" "8P" "8P" "8, ',
+  '"8   8I   8I  I8, ,8I  i8"    ,8I   Y8,   ,8P 88   I8   8I   8I   8I ',
+  '     8I   Yb, `YbadP" ,d8,   ,d8"    Yb,_,dP_,88,_,dP   8I   8I   Yb,',
+  '     8I   `Y8888P"Y888P"Y8888P"       "Y8P" 8P""Y88P:   8I   8I   `Y8',
   '',
   ' Type backslash for a visual list of keybinds.',
   ' Happy Vimming!',
-
-}
+}})
 g.startify_bookmarks = {}
 g.startify_change_to_vcs_root = 1
 g.startify_lists = {
@@ -184,7 +190,19 @@ g.startify_lists = {
 g.eighties_bufname_additional_patterns = {'__Tagbar__'}
 
 cmd "colo molokai"
-cmd "au BufRead * set cursorline"
+vim.api.nvim_create_autocmd("BufRead", {
+  callback = function() opt.cursorline = true end
+})
+-- autoclose tree with last buffer
+vim.api.nvim_create_autocmd("BufEnter", {
+  group = vim.api.nvim_create_augroup("NvimTreeClose", {clear = true}),
+  callback = function()
+    local layout = vim.api.nvim_call_function("winlayout", {})
+    if layout[1] == "leaf" and vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(layout[2]), "filetype") == "NvimTree" and layout[3] == nil then
+      cmd "quit"
+    end
+  end,
+})
 
 g.neovide_cursor_vfx_mode = "railgun"
 g.neovide_refresh_rate = 20
@@ -211,9 +229,12 @@ g.rooter_patterns = {".git", ".bzr", "Makefile", "Cargo.toml"}
 g.signify_vcs_cmds = {bzr = "bzr diff --diff-options=-U0 -- %f"}
 
 require"nvim-tree".setup {
-  open_on_setup = true,
-  open_on_setup_file = true,
-  ignore_buffer_on_setup = true,
+  view = {
+    width = 30,
+  },
+  filters = {
+    dotfiles = true,
+  },
 }
 
 ----------------------------------------
@@ -227,7 +248,7 @@ require"lsp_signature".setup{
 
 lspconfig.ltex.setup {
   cmd = { os.getenv("HOME").."/opt/ltex-ls-15.1.0/bin/ltex-ls" };
-  filetypes = { "markdown", "rst", "tex", "mail" };
+  filetypes = { "markdown", "rst", "tex", "mail", "text" };
   single_file_support = true;
   settings = {
     ltex = {
@@ -269,7 +290,7 @@ lspconfig.sumneko_lua.setup{
 }
 
 lspconfig.pylsp.setup{
-  cmd = { "pyls" }
+  cmd = { "pylsp" }
 }
 
 lspconfig.rust_analyzer.setup{
@@ -280,8 +301,8 @@ lspconfig.vimls.setup{
 }
 lspconfig.gopls.setup{}
 
-opt.omnifunc = "v:lua.vim.lsp.omnifunc"
-opt.completefunc = "v:lua.vim.lsp.omnifunc"
+
+
 opt.signcolumn = "yes"
 
 
@@ -319,6 +340,7 @@ g.lmap = {
     d = {':e $MYVIMRC', 'Open dotfile'},
     f = {"fzf#vim#files('', fzf#vim#with_preview({'source': 'rg --files -g \"!*.pyc\"'}), 0)", 'Find file'},
     g = {":Grepper -tool rg", 'Grep'},
+    t = {"NvimTreeToggle", "file Tree toggle"}
   },
   l = {
     name = 'Language',
@@ -456,6 +478,7 @@ require'nvim-treesitter.configs'.setup {
         -- you can optionally set descriptions to the mappings (used in the desc parameter of nvim_buf_set_keymap
         ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
       },
+
       -- You can choose the select mode (default is charwise 'v')
       selection_modes = {
         ['@parameter.outer'] = 'v', -- charwise
@@ -469,7 +492,31 @@ require'nvim-treesitter.configs'.setup {
       -- include_surrounding_whitespace = true,
     },
   },
+  move = {
+    enable = true,
+    goto_next_start = {
+      ["]m"] = {"@function.outer", "@class.outer"},
+    },
+  },
 }
 require'nvim-autopairs'.setup {
   check_ts = true,
 }
+
+local cmp = require 'cmp'
+require'cmp'.setup {
+  snippet = {expand = function(args) vim.fn["vsnip#anonymous"](args.body) end,},
+  mapping = cmp.mapping.preset.insert({
+    ['<Tab>'] = cmp.mapping.confirm({ select = true }),
+  }),
+  sources = cmp.config.sources({
+    {name = 'nvim_lsp'},
+    {name = 'vsnip'},
+  }, {
+    {name = 'buffer'},
+  }),
+}
+vim.api.nvim_set_keymap("i", "<Tab>", "vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'", {expr=true, silent=true})
+vim.api.nvim_set_keymap("s", "<Tab>", "vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'", {expr=true, silent=true})
+vim.api.nvim_set_keymap("i", "<S-Tab>", "vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'", {expr=true, silent=true})
+vim.api.nvim_set_keymap("s", "<S-Tab>", "vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'", {expr=true, silent=true})
