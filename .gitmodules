@@ -154,3 +154,33 @@
 [submodule "site/pack/simpoir/opt/vim-vsnip"]
 	path = site/pack/simpoir/opt/vim-vsnip
 	url = https://github.com/hrsh7th/vim-vsnip
+[submodule "site/pack/simpoir/opt/mason.nvim"]
+	path = site/pack/simpoir/opt/mason.nvim
+	url = https://github.com/williamboman/mason.nvim
+[submodule "site/pack/simpoir/opt/mason-lspconfig.nvim"]
+	path = site/pack/simpoir/opt/mason-lspconfig.nvim
+	url = https://github.com/williamboman/mason-lspconfig.nvim
+[submodule "site/pack/simpoir/opt/null-ls.nvim"]
+	path = site/pack/simpoir/opt/null-ls.nvim
+	url = https://github.com/jose-elias-alvarez/null-ls.nvim
+[submodule "site/pack/simpoir/opt/plenary.nvim"]
+	path = site/pack/simpoir/opt/plenary.nvim
+	url = https://github.com/nvim-lua/plenary.nvim
+[submodule "site/pack/simpoir/opt/telescope.nvim"]
+	path = site/pack/simpoir/opt/telescope.nvim
+	url = https://github.com/nvim-telescope/telescope.nvim
+[submodule "site/pack/simpoir/opt/pear-tree"]
+	path = site/pack/simpoir/opt/pear-tree
+	url = https://github.com/tmsvg/pear-tree
+[submodule "site/pack/simpoir/opt/tabout.nvim"]
+	path = site/pack/simpoir/opt/tabout.nvim
+	url = https://github.com/abecodes/tabout.nvim
+[submodule "site/pack/simpoir/opt/LuaSnip"]
+	path = site/pack/simpoir/opt/LuaSnip
+	url = https://github.com/L3MON4D3/LuaSnip
+[submodule "site/pack/simpoir/opt/cmp_luasnip"]
+	path = site/pack/simpoir/opt/cmp_luasnip
+	url = https://github.com/saadparwaiz1/cmp_luasnip
+[submodule "site/pack/simpoir/opt/vim-matchup"]
+	path = site/pack/simpoir/opt/vim-matchup
+	url = https://github.com/andymass/vim-matchup

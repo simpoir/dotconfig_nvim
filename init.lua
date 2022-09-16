@@ -31,12 +31,6 @@ local g = vim.g
 local opt = vim.opt
 
 ----------------------------------------
--- Bootstrap Site Packs
-----------------------------------------
-local install_path = fn.stdpath("config") .. "/site/"
-opt.packpath:append(install_path)
-
-----------------------------------------
 -- Packages
 ----------------------------------------
 local packs = {
@@ -46,29 +40,37 @@ local packs = {
   'vim-airline/vim-airline';
   'vim-airline/vim-airline-themes';
   'kyazdani42/nvim-web-devicons';
-  'mhinz/vim-signify';                 -- like gitgutter for all
-  'liuchengxu/vim-which-key';          -- the backslash menu
-  'justincampbell/vim-eighties';       -- auto 80col resizer
+  'mhinz/vim-signify'; -- like gitgutter for all
+  'liuchengxu/vim-which-key'; -- the backslash menu
+  'justincampbell/vim-eighties'; -- auto 80col resizer
+
+  -- LSP and IDE lang stack
+  ----------------------------------------
+  'williamboman/mason.nvim'; -- lsp, dap, linter, formatter installer
+  'williamboman/mason-lspconfig.nvim';
+  'neovim/nvim-lspconfig'; -- common configs for LSP
+  'mfussenegger/nvim-dap'; -- debug adapter protocol
+  'nvim-lua/plenary.nvim'; -- lua boilerplate, for null-ls
+  'jose-elias-alvarez/null-ls.nvim'; -- extra linting/formatting
 
   -- Coding
   ----------------------------------------
   'mhinz/vim-startify';
-  'neovim/nvim-lspconfig';             -- common configs for LSP
-  'embear/vim-localvimrc';             -- .lvimrc support
-  'janko-m/vim-test';                  -- generic test runner
-  {'jeetsukumaran/vim-python-indent-black', eager=true};
-  'ray-x/lsp_signature.nvim';          -- the nice floating preview with highlights
+  'embear/vim-localvimrc'; -- .lvimrc support
+  'janko-m/vim-test'; -- generic test runner
+  { 'jeetsukumaran/vim-python-indent-black', eager = true };
+  'ray-x/lsp_signature.nvim'; -- the nice floating preview with highlights
   'hrsh7th/cmp-nvim-lsp';
   'hrsh7th/cmp-path';
   'hrsh7th/cmp-buffer';
   'hrsh7th/cmp-cmdline';
-  'hrsh7th/cmp-vsnip';
-  'hrsh7th/vim-vsnip';
+  'saadparwaiz1/cmp_luasnip';
+  'L3MON4D3/LuaSnip';
   'hrsh7th/nvim-cmp';
 
   -- Syntax
   ----------------------------------------
-  'knatsakis/deb.vim';                 -- support for xz
+  'knatsakis/deb.vim'; -- support for xz
   'saltstack/salt-vim';
   'Glench/Vim-Jinja2-Syntax';
   'dbeniamine/todo.txt-vim';
@@ -77,85 +79,33 @@ local packs = {
   'folke/trouble.nvim';
   'nvim-treesitter/nvim-treesitter';
   'nvim-treesitter/nvim-treesitter-textobjects';
-  'theHamsta/nvim-treesitter-pairs';
+  'andymass/vim-matchup';
 
   -- Edition
   ----------------------------------------
-  'tpope/vim-sleuth';                  -- auto shiftwidth
-  'matze/vim-move';                    -- alt-arrow line moving
+  'tpope/vim-sleuth'; -- auto shiftwidth
+  'matze/vim-move'; -- alt-arrow line moving
   'jqno/jqno-extractvariable.vim';
   'tpope/vim-surround';
   'tpope/vim-commentary';
-  'psf/black';
-  'fisadev/vim-isort';
-  'windwp/nvim-autopairs';
+  'windwp/nvim-autopairs'; -- autoclose pairs
+  'abecodes/tabout.nvim'; -- jumps out of pairs
 
   -- Tooling
   ----------------------------------------
-  'junegunn/fzf';
-  'junegunn/fzf.vim';
-  'tpope/vim-obsession';               -- auto session management
-  'tpope/vim-fugitive';                -- git commands
-  'mhinz/vim-grepper';                 -- ag/rg/grep generic grepper
-  'airblade/vim-rooter';               -- autochdir to repo
-  'junkblocker/patchreview-vim';       -- side-by-side diff viewer
-  'mbbill/undotree';                   -- visual undo tree
-  'kopischke/vim-fetch';               -- file:line remapper
-  'kyazdani42/nvim-tree.lua';          -- file tree
-  'kyazdani42/nvim-web-devicons';      -- file tree
-  'majutsushi/tagbar';                 -- taglist panel
-  'mfussenegger/nvim-dap';             -- debug adapter protocol
+  'nvim-telescope/telescope.nvim'; -- like fzf, but lua
+  'tpope/vim-obsession'; -- auto session management
+  'tpope/vim-fugitive'; -- git commands
+  'mhinz/vim-grepper'; -- ag/rg/grep generic grepper
+  'airblade/vim-rooter'; -- autochdir to repo
+  'junkblocker/patchreview-vim'; -- side-by-side diff viewer
+  'mbbill/undotree'; -- visual undo tree
+  'kopischke/vim-fetch'; -- file:line remapper
+  'kyazdani42/nvim-tree.lua'; -- file tree
+  'kyazdani42/nvim-web-devicons'; -- file tree
+  'majutsushi/tagbar'; -- taglist panel
 }
--- tiny package manager
-local breadcrumbs = fn.readdir(install_path.."pack/simpoir/opt")
-local has_errors = false
-for i, pack in pairs(packs) do
-  local eager = false
-  if type(pack) == "table" then
-    local pack_opt = pack
-    pack = pack[1]
-    eager = pack_opt["eager"]
-  end
-  local p = string.gsub(pack, "^[^/]+/", "")
-  -- lazy-ish loader
-  local pack_dir = "pack/simpoir/opt/"..p;
-  local abs_pack_dir = install_path..pack_dir;
-  if #(fn.glob(abs_pack_dir)) == 0 then
-    print("["..i.."/"..#packs.."] Adding submodule pack for "..p)
-    print(fn.system({"git", "-C", fn.stdpath("config"), "submodule", "add", "--force", "https://github.com/"..pack, "site/"..pack_dir}))
-  end
-  if #(fn.readdir(abs_pack_dir)) == 0 then
-    print("["..i.."/"..#packs.."] Pulling submodule pack for "..p)
-    fn.system({"git", "-C", fn.stdpath("config"), "submodule", "update", "--init", "site/pack/simpoir/opt/"..p})
-  end
-  if not has_errors then cmd("redrawstatus") end
-  print("loading pack "..p)
-  if eager then
-    cmd("set runtimepath^="..abs_pack_dir)
-  end
-  if not pcall(cmd, "packadd! "..p) then -- lazy pack load, so config globals are initialized
-    has_errors = true
-  end
-  for k, v in pairs(breadcrumbs) do
-    if v == p then table.remove(breadcrumbs, k) end
-  end
-end
-cmd "helptags ALL"
-if #breadcrumbs > 0 then
-  local msg = "leftover packs: "
-  for _, v in pairs(breadcrumbs) do
-    msg = msg .. v .. " "
-  end
-  print(msg)
-else
-  if not has_errors then cmd("redraw") end
-end
-
-function PlugUp()
-  print("this is gonna take a while")
-  print(fn.system({"git", "-C", fn.stdpath("config"), "submodule", "update", "--remote"}))
-end
-vim.cmd "command PlugUp lua PlugUp()"
+require("simpoir.packman").setup(packs)
 
 -- compat
 opt.shell = "/bin/bash"
@@ -164,7 +114,7 @@ opt.shell = "/bin/bash"
 -- Look and feel
 ----------------------------------------
 
-g.startify_custom_header = vim.api.nvim_call_function("startify#center", {{
+g.startify_custom_header = vim.api.nvim_call_function("startify#center", { {
   '                               ,ggg,         ,gg                     ',
   '                              dP""Y8a       ,8P                      ',
   '                              Yb, `88       d8"                      ',
@@ -178,16 +128,16 @@ g.startify_custom_header = vim.api.nvim_call_function("startify#center", {{
   '',
   ' Type backslash for a visual list of keybinds.',
   ' Happy Vimming!',
-}})
+} })
 g.startify_bookmarks = {}
 g.startify_change_to_vcs_root = 1
 g.startify_lists = {
-  { type = 'sessions',  header = {'   Sessions'}           },
-  { type = 'bookmarks', header = {'   Bookmarks'}          },
-  { type = 'dir',       header = {'   MRU '.. fn.getcwd()} },
-  { type = 'commands',  header = {'   Commands'}           },
+  { type = 'sessions', header = { '   Sessions' } },
+  { type = 'bookmarks', header = { '   Bookmarks' } },
+  { type = 'dir', header = { '   MRU ' .. fn.getcwd() } },
+  { type = 'commands', header = { '   Commands' } },
 }
-g.eighties_bufname_additional_patterns = {'__Tagbar__'}
+g.eighties_bufname_additional_patterns = { '__Tagbar__' }
 
 cmd "colo molokai"
 vim.api.nvim_create_autocmd("BufRead", {
@@ -195,10 +145,11 @@ vim.api.nvim_create_autocmd("BufRead", {
 })
 -- autoclose tree with last buffer
 vim.api.nvim_create_autocmd("BufEnter", {
-  group = vim.api.nvim_create_augroup("NvimTreeClose", {clear = true}),
+  group = vim.api.nvim_create_augroup("NvimTreeClose", { clear = true }),
   callback = function()
     local layout = vim.api.nvim_call_function("winlayout", {})
-    if layout[1] == "leaf" and vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(layout[2]), "filetype") == "NvimTree" and layout[3] == nil then
+    if layout[1] == "leaf" and vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(layout[2]), "filetype") == "NvimTree"
+        and layout[3] == nil then
       cmd "quit"
     end
   end,
@@ -216,19 +167,18 @@ opt.mouse = "a"
 opt.number = true
 opt.termguicolors = true
 opt.completeopt = "noinsert,menuone,noselect"
--- disable built-in pair in favor of treesitter
-opt.matchpairs = ""
+opt.updatetime = 2000 -- time between keystrokes which is considered idle.
 
 ----------------------------------------
 -- Tooling
 ----------------------------------------
 g.localvimrc_persistent = 1
-g.localvimrc_name = {".lvimrc", "_vimrc_local.vim"}
+g.localvimrc_name = { ".lvimrc", "_vimrc_local.vim" }
 g.rooter_change_directory_for_non_project_files = "current" -- soothes LSP in home dir
-g.rooter_patterns = {".git", ".bzr", "Makefile", "Cargo.toml"}
-g.signify_vcs_cmds = {bzr = "bzr diff --diff-options=-U0 -- %f"}
+g.rooter_patterns = { ".git", ".bzr", "Makefile", "Cargo.toml" }
+g.signify_vcs_cmds = { bzr = "bzr diff --diff-options=-U0 -- %f" }
 
-require"nvim-tree".setup {
+require("nvim-tree").setup {
   view = {
     width = 30,
   },
@@ -236,32 +186,21 @@ require"nvim-tree".setup {
     dotfiles = true,
   },
 }
+require("telescope").setup {}
 
 ----------------------------------------
 -- LSP
 ----------------------------------------
+require("mason").setup()
+require("mason-lspconfig").setup {
+  automatic_installation = true,
+}
 local lspconfig = require("lspconfig")
-
-require"lsp_signature".setup{
-  zindex = 1,
+local lsp_caps = require("cmp_nvim_lsp").update_capabilities(vim.lsp.protocol.make_client_capabilities())
+lspconfig.jedi_language_server.setup {
+  capabilities = lsp_caps,
 }
-
-lspconfig.ltex.setup {
-  cmd = { os.getenv("HOME").."/opt/ltex-ls-15.1.0/bin/ltex-ls" };
-  filetypes = { "markdown", "rst", "tex", "mail", "text" };
-  single_file_support = true;
-  settings = {
-    ltex = {
-      dictionary = {
-        ["en-US"] = fn.readfile(fn.stdpath("config").."/spell/en.utf-8.add");
-      }
-    }
-  };
-}
-
-lspconfig.yamlls.setup{
-  -- from snap
-  cmd = { "yaml-language-server", "--stdio" },
+lspconfig.yamlls.setup {
   settings = {
     redhat = { telemetry = { enabled = false } },
     yaml = { schemas = {
@@ -271,99 +210,117 @@ lspconfig.yamlls.setup{
   }
 }
 
-lspconfig.sumneko_lua.setup{
-  cmd = {os.getenv("HOME").."/opt/lua-language-server/bin/lua-language-server", "-E", os.getenv("HOME").."/opt/lua-language-server/main.lua"};
+lspconfig.rust_analyzer.setup {
+  capabilities = lsp_caps,
+  settings = { ['rust-analyzer'] = { checkOnSave = { command = 'clippy' } } }
+}
+lspconfig.sumneko_lua.setup {
   settings = {
     Lua = {
-      runtime = {
-        version = "LuaJIT",
-      },
       diagnostics = {
-        globals = {"vim"},
+        globals = { "vim" },
       },
       workspace = {
-        library = vim.api.nvim_get_runtime_file("", true),
-      },
-      telemetry = { enable = false },
+        library = {
+          [vim.fn.expand "$VIMRUNTIME/lua"] = true,
+          [vim.fn.expand "$VIMRUNTIME/lua/vim/lsp"] = true,
+        },
+        maxPreload = 10000,
+        preloadFileSize = 10000,
+      }
     }
   }
 }
+lspconfig.ltex.setup {}
+lspconfig.vimls.setup {}
+lspconfig.gopls.setup {}
 
-lspconfig.pylsp.setup{
-  cmd = { "pylsp" }
+require "lsp_signature".setup {
+  zindex = 1,
 }
 
-lspconfig.rust_analyzer.setup{
-  settings = { ['rust-analyzer'] = { checkOnSave= { command= 'clippy' } } }
+-- non-lsp lang bits
+local nuls = require "null-ls"
+nuls.setup {
+  sources = {
+    nuls.builtins.formatting.stylua,
+    nuls.builtins.formatting.black,
+    nuls.builtins.formatting.yapf,
+    nuls.builtins.formatting.isort,
+    nuls.builtins.formatting.gofmt,
+    nuls.builtins.formatting.rustfmt,
+    nuls.builtins.diagnostics.fish,
+    nuls.builtins.diagnostics.flake8,
+    nuls.builtins.code_actions.shellcheck,
+  },
 }
-lspconfig.vimls.setup{
-  cmd = {"node", os.getenv("HOME").."/node_modules/.bin/vim-language-server", "--stdio"}
+
+
+vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
+  vim.lsp.diagnostic.on_publish_diagnostics, {
+  virtual_text = false,
+  underline = true,
+  signs = true,
 }
-lspconfig.gopls.setup{}
+)
+vim.api.nvim_create_autocmd("CursorHold", { callback = vim.diagnostic.open_float })
+vim.api.nvim_create_autocmd("CursorHoldI", { callback = vim.lsp.buf.signature_help })
 
-
-
-opt.signcolumn = "yes"
-
-
-----------------------------------------
--- Edition
-----------------------------------------
--- opt.autoindent = true
--- opt.smartindent = true
 
 ----------------------------------------
 -- Pretty Mappings
 ----------------------------------------
 fn["which_key#register"]("Leader", "g:lmap")
-vim.api.nvim_set_keymap("n", "<leader>", "<cmd>WhichKey 'Leader'<CR>", {noremap=true, silent=true})
-vim.api.nvim_set_keymap("v", "<leader>", "<cmd>WhichKeyVisual 'Leader'<CR>", {noremap=true, silent=true})
-vim.api.nvim_set_keymap("v", "<leader>ev", "<Plug>(extractVariableVisual)", {noremap=true, silent=true})
+vim.api.nvim_set_keymap("n", "<leader>", "<cmd>WhichKey 'Leader'<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<leader>", "<cmd>WhichKeyVisual 'Leader'<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<leader>ev", "<Plug>(extractVariableVisual)", { noremap = true, silent = true })
 g.lmap = {
   name = 'Global',
   c = {
     name = 'Cursor',
-    b = {':!xdg-open https://pad.lv/<cword>', 'Launchpad Bug'},
+    b = { ':!xdg-open https://pad.lv/<cword>', 'Launchpad Bug' },
   },
   d = {
     name = 'Debug',
-    b = {"luaeval('require\"dap\".toggle_breakpoint()')", 'Break'},
-    n = {"luaeval('require\"dap\".step_over()')", 'Next'},
-    x = {"luaeval('require\"dap\".repl.open()')", 'Eval'},
-    c = {"luaeval('require\"dap\".continue()')", 'Continue'},
-    t = {'v:lua.DbgRustTests()', 'Debug tests'},
+    b = { "luaeval('require\"dap\".toggle_breakpoint()')", 'Break' },
+    n = { "luaeval('require\"dap\".step_over()')", 'Next' },
+    x = { "luaeval('require\"dap\".repl.open()')", 'Eval' },
+    c = { "luaeval('require\"dap\".continue()')", 'Continue' },
+    t = { 'v:lua.DbgRustTests()', 'Debug tests' },
   },
   f = {
     name = 'Files',
-    a = {'v:lua.Alternate()', 'jump to Alternate file.'},
-    c = {'v:lua.BufGone()', 'Close buffer and switch to next'},
-    d = {':e $MYVIMRC', 'Open dotfile'},
-    f = {"fzf#vim#files('', fzf#vim#with_preview({'source': 'rg --files -g \"!*.pyc\"'}), 0)", 'Find file'},
-    g = {":Grepper -tool rg", 'Grep'},
-    t = {"NvimTreeToggle", "file Tree toggle"}
+    a = { 'v:lua.Alternate()', 'jump to Alternate file.' },
+    c = { 'v:lua.BufGone()', 'Close buffer and switch to next' },
+    d = { ':e $MYVIMRC', 'Open dotfile' },
+    f = { ":Telescope find_files", 'Find file' },
+    g = { ":Grepper -tool rg", 'Grep' },
+    t = { "NvimTreeToggle", "file Tree toggle" }
   },
   l = {
     name = 'Language',
-    d = {"luaeval('vim.lsp.buf.definition()')", 'Definition'},
-    f = {"luaeval('vim.lsp.buf.formatting()')", "format"},
-    e = {"Trouble", "Diagnostics"},
-    h = {"luaeval('vim.lsp.buf.hover()')", "hover"},
-    i = {"luaeval('vim.lsp.buf.implementation()')", 'Implementation'},
-    q = {"luaeval('vim.lsp.buf.code_action()')", 'Quick-fix'},
-    r = {"luaeval('vim.lsp.buf.rename()')", 'Rename symbol'},
-    R = {"luaeval('vim.lsp.buf.references()')", 'Find References'}
+    d = { "luaeval('vim.lsp.buf.definition()')", 'Definition' },
+    f = { "luaeval('vim.lsp.buf.formatting()')", "format" },
+    e = { "Trouble", "Diagnostics" },
+    h = { "luaeval('vim.lsp.buf.hover()')", "hover" },
+    i = { "luaeval('vim.lsp.buf.implementation()')", 'Implementation' },
+    q = { "luaeval('vim.lsp.buf.code_action()')", 'Quick-fix' },
+    r = { "luaeval('vim.lsp.buf.rename()')", 'Rename symbol' },
+    R = { "luaeval('vim.lsp.buf.references()')", 'Find References' }
   },
   t = {
     name = 'Test',
-    f = {':TestFile', 'Test file'},
-    l = {':TestLast', 'Retest last'},
-    n = {':TestNearest', 'Test nearest'},
+    f = { ':TestFile', 'Test file' },
+    l = { ':TestLast', 'Retest last' },
+    n = { ':TestNearest', 'Test nearest' },
   },
 }
 
 
-vim.api.nvim_set_keymap("i", "rpudb", "<cmd>cal setline(line('.'), getline(line('.')).'import pudb.remote; pudb.remote.set_trace(term_size=('.&columns.', '.(&lines-1).'))')<CR>", {noremap=true})
-vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", {noremap=true})
+vim.api.nvim_set_keymap("i", "rpudb",
+  "<cmd>cal setline(line('.'), getline(line('.')).'import pudb.remote; pudb.remote.set_trace(term_size=('.&columns.', '.(&lines-1).'))')<CR>"
+  , { noremap = true })
+vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", { noremap = true })
 
 cmd [[
 augroup autoformat
@@ -388,15 +345,14 @@ function Alternate()
     end
   elseif filetype == 'go' then
     if fn.match(fn.expand('%:p'), '_test.go$') ~= -1 then
-      cmd("edit "..fn.fnameescape(fn.substitute(fn.expand('%:p'), '_test.go$', '.go', '')))
+      cmd("edit " .. fn.fnameescape(fn.substitute(fn.expand('%:p'), '_test.go$', '.go', '')))
     else
-      cmd("edit "..fn.fnameescape(fn.substitute(fn.expand('%:p'), '.go$', '_test.go', '')))
+      cmd("edit " .. fn.fnameescape(fn.substitute(fn.expand('%:p'), '.go$', '_test.go', '')))
     end
   else
-    print("no defined alt for this filetype: ".. filetype);
+    print("no defined alt for this filetype: " .. filetype);
   end
 end
-
 
 function BufGone()
   cmd("bn")
@@ -405,13 +361,14 @@ end
 
 function DbgRustTests()
   local dap = require('dap')
-  local tgt = fn.system({"sh", "-c", "cargo build -q --tests --message-format=json|jq -r 'select(.executable).executable'"}):gsub("\n$", "")
+  local tgt = fn.system({ "sh", "-c",
+    "cargo build -q --tests --message-format=json|jq -r 'select(.executable).executable'" }):gsub("\n$", "")
   local modname = fn.expand("%:r"):gsub("/", "::"):gsub("^src::", "")
-  -- cmd("TermdebugCommand "..tgt.." --nocapture "..modname)
   dap.configurations.rust[1].program = tgt
-  dap.configurations.rust[1].args = {modname}
+  dap.configurations.rust[1].args = { modname }
   dap.continue()
 end
+
 cmd "command DbgRustTests lua DbgRustTests()"
 
 local dap = require('dap')
@@ -435,8 +392,8 @@ dap.configurations.rust = {
 }
 
 
-require'nvim-treesitter.configs'.setup {
-  ensure_installed = { "c", "lua", "python", "rust"},
+require 'nvim-treesitter.configs'.setup {
+  ensure_installed = { "c", "lua", "python", "rust" },
   sync_install = false,
   auto_install = true,
   autopairs = {
@@ -446,22 +403,11 @@ require'nvim-treesitter.configs'.setup {
     enable = true,
   },
   indent = {
-    enable =true,
-  },
-  pairs = {
     enable = true,
-    -- disable = {},
-    highlight_pair_events = {"CursorMoved"},
-    highlight_self = false,
-    delete_balanced = {
-      only_on_first_char = false,
-      fallback_cmd_normal = nil,
-      longest_partner = false
-    },
-    keymaps = {
-      goto_partner = "%",
-      delete_balanced = "X",
-    },
+  },
+  matchup = {
+    enable = true,
+    disable = {},
   },
   textobjects = {
     select = {
@@ -495,28 +441,45 @@ require'nvim-treesitter.configs'.setup {
   move = {
     enable = true,
     goto_next_start = {
-      ["]m"] = {"@function.outer", "@class.outer"},
+      ["]m"] = { "@function.outer", "@class.outer" },
     },
   },
 }
-require'nvim-autopairs'.setup {
+require 'nvim-autopairs'.setup {
   check_ts = true,
 }
 
 local cmp = require 'cmp'
-require'cmp'.setup {
-  snippet = {expand = function(args) vim.fn["vsnip#anonymous"](args.body) end,},
+local luasnip = require("luasnip")
+require 'cmp'.setup {
+  snippet = {
+    expand = function(args)
+      require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+    end,
+  },
+  window = {
+    completion = cmp.config.window.bordered(),
+    documentation = cmp.config.window.bordered(),
+  },
   mapping = cmp.mapping.preset.insert({
-    ['<Tab>'] = cmp.mapping.confirm({ select = true }),
+    ["<CR>"] = cmp.mapping.confirm({ select = true }),
+    ["<Tab>"] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.mapping.confirm({ select = true })
+      elseif luasnip.expand_or_locally_jumpable() then
+        luasnip.expand_or_jump()
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
   }),
   sources = cmp.config.sources({
-    {name = 'nvim_lsp'},
-    {name = 'vsnip'},
+    { name = 'nvim_lsp' },
+    { name = 'luasnip' },
   }, {
-    {name = 'buffer'},
+    { name = 'buffer' },
   }),
 }
-vim.api.nvim_set_keymap("i", "<Tab>", "vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'", {expr=true, silent=true})
-vim.api.nvim_set_keymap("s", "<Tab>", "vsnip#jumpable(1) ? '<Plug>(vsnip-jump-next)' : '<Tab>'", {expr=true, silent=true})
-vim.api.nvim_set_keymap("i", "<S-Tab>", "vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'", {expr=true, silent=true})
-vim.api.nvim_set_keymap("s", "<S-Tab>", "vsnip#jumpable(-1) ? '<Plug>(vsnip-jump-prev)' : '<S-Tab>'", {expr=true, silent=true})
+
+-- Needs to be after cmp.
+require 'tabout'.setup {}
