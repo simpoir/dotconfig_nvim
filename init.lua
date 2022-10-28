@@ -43,6 +43,7 @@ local packs = {
 	"mhinz/vim-signify", -- like gitgutter for all
 	"liuchengxu/vim-which-key", -- the backslash menu
 	"justincampbell/vim-eighties", -- auto 80col resizer
+	"yggdroot/indentLine", -- show line indentation
 
 	-- LSP and IDE lang stack
 	----------------------------------------
@@ -134,6 +135,8 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 opt.updatetime = 2000 -- time between keystrokes which is considered idle.
+g.indentLine_char = "┊"
+g.indentLine_concealcursor = "c"
 
 ----------------------------------------
 -- Tooling
@@ -308,7 +311,7 @@ vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", { noremap 
 
 -- format on save for a select few types
 vim.api.nvim_create_autocmd("BufWritePre", {
-	pattern = { "*.go", "*.rs", "*.lua" },
+	pattern = { "*.go", "*.rs", "*.lua", "*.js" },
 	callback = vim.lsp.buf.formatting_sync,
 })
 vim.api.nvim_create_autocmd("BufReadPost", {
@@ -335,6 +338,12 @@ function Alternate()
 			cmd("edit " .. fn.expand("%:h") .. "/tests/test_" .. fn.expand("%:t"))
 		else
 			cmd("edit " .. fn.fnameescape(alt[2] .. alt[3]))
+		end
+	elseif filetype == "cpp" then
+		if fn.expand("%:e") == "h" then
+			cmd("edit %:r.cpp")
+		else
+			cmd("edit %:r.h")
 		end
 	elseif filetype == "go" then
 		if fn.match(fn.expand("%:p"), "_test.go$") ~= -1 then
@@ -448,13 +457,7 @@ require("nvim-autopairs").setup({
 local cmp = require("cmp")
 local luasnip = require("luasnip")
 require("cmp").setup({
-	enabled = function()
-		return (
-			not require("cmp.config.context").in_treesitter_capture("comment")
-			and not require("cmp.config.context").in_treesitter_capture("string")
-			and not require("cmp.config.context").in_syntax_group("Comment")
-		)
-	end,
+	enabled = true,
 	snippet = {
 		expand = function(args)
 			require("luasnip").lsp_expand(args.body) -- For `luasnip` users.

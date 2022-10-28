@@ -184,3 +184,6 @@
 [submodule "site/pack/simpoir/opt/vim-matchup"]
 	path = site/pack/simpoir/opt/vim-matchup
 	url = https://github.com/andymass/vim-matchup
+[submodule "site/pack/simpoir/opt/indentLine"]
+	path = site/pack/simpoir/opt/indentLine
+	url = https://github.com/yggdroot/indentLine
