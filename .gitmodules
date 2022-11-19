@@ -187,3 +187,9 @@
 [submodule "site/pack/simpoir/opt/indentLine"]
 	path = site/pack/simpoir/opt/indentLine
 	url = https://github.com/yggdroot/indentLine
+[submodule "site/pack/simpoir/opt/vim-cool"]
+	path = site/pack/simpoir/opt/vim-cool
+	url = https://github.com/romainl/vim-cool
+[submodule "site/pack/simpoir/opt/nvim-ts-autotag"]
+	path = site/pack/simpoir/opt/nvim-ts-autotag
+	url = https://github.com/windwp/nvim-ts-autotag

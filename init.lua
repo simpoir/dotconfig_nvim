@@ -1,9 +1,9 @@
 -- ==================================================
 -- Simpoir's unfriendly but convenient nvim config
 --
--- For Neovim 0.7.0+
+-- For Neovim 0.8.0+
 --
--- Copyright (c) 2019-2021 Simon Poirier
+-- Copyright (c) 2019-2022 Simon Poirier
 --
 -- Permission is hereby granted, free of charge, to any person obtaining a copy
 -- of this software and associated documentation files (the "Software"), to
@@ -59,7 +59,6 @@ local packs = {
 	"mhinz/vim-startify",
 	"embear/vim-localvimrc", -- .lvimrc support
 	"janko-m/vim-test", -- generic test runner
-	-- { 'jeetsukumaran/vim-python-indent-black', eager = true };
 	"ray-x/lsp_signature.nvim", -- the nice floating preview with highlights
 	"hrsh7th/cmp-nvim-lsp",
 	"hrsh7th/cmp-path",
@@ -76,6 +75,7 @@ local packs = {
 	"folke/trouble.nvim",
 	"nvim-treesitter/nvim-treesitter",
 	"nvim-treesitter/nvim-treesitter-textobjects",
+	"windwp/nvim-ts-autotag", -- auto close tags using ts
 	"andymass/vim-matchup",
 
 	-- Edition
@@ -101,6 +101,7 @@ local packs = {
 	"kyazdani42/nvim-tree.lua", -- file tree
 	"kyazdani42/nvim-web-devicons", -- file tree
 	"majutsushi/tagbar", -- taglist panel
+	"romainl/vim-cool", -- auto-toggle hls
 }
 require("simpoir.packman").setup(packs)
 
@@ -113,6 +114,7 @@ opt.shell = "/bin/bash"
 require("simpoir.ui").setup({
 	theme = "molokai",
 })
+g.eighties_bufname_additional_patterns = { "fugitiveblame", "NvimTree" }
 
 vim.api.nvim_create_autocmd("BufReadPost", {
 	callback = function()
@@ -124,8 +126,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
 	group = vim.api.nvim_create_augroup("NvimTreeClose", { clear = true }),
 	callback = function()
 		local layout = vim.api.nvim_call_function("winlayout", {})
-		if
-			layout[1] == "leaf"
+		if layout[1] == "leaf"
 			and vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(layout[2]), "filetype") == "NvimTree"
 			and layout[3] == nil
 		then
@@ -169,11 +170,11 @@ require("mason-lspconfig").setup({
 })
 require("mason").setup()
 local lspconfig = require("lspconfig")
-local lsp_caps = require("cmp_nvim_lsp").update_capabilities(vim.lsp.protocol.make_client_capabilities())
+local lsp_caps = require("cmp_nvim_lsp").default_capabilities()
 lspconfig.util.default_config["capabilities"] = lsp_caps
 lspconfig.pylsp.setup({
 	on_attach = function(client)
-		client.resolved_capabilities.document_formatting = false
+		client.server_capabilities.document_formatting = false
 	end,
 })
 lspconfig.yamlls.setup({
@@ -194,7 +195,7 @@ lspconfig.rust_analyzer.setup({
 })
 lspconfig.sumneko_lua.setup({
 	on_attach = function(client)
-		client.resolved_capabilities.document_formatting = false
+		client.server_capabilities.document_formatting = false
 	end,
 	settings = {
 		Lua = {
@@ -229,10 +230,11 @@ require("lsp_signature").setup({
 })
 
 -- non-lsp lang bits
+opt.tabstop = 2
 local nuls = require("null-ls")
 nuls.setup({
 	sources = {
-		nuls.builtins.formatting.stylua,
+		-- nuls.builtins.formatting.stylua,
 		nuls.builtins.formatting.isort,
 		-- method = nuls.builtins.formatting.yapf,
 		nuls.builtins.formatting.black,
@@ -304,7 +306,8 @@ g.lmap = {
 vim.api.nvim_set_keymap(
 	"i",
 	"rpudb",
-	"<cmd>cal setline(line('.'), getline(line('.')).'import pudb.remote; pudb.remote.set_trace(term_size=('.&columns.', '.(&lines-1).'))')<CR>",
+	"<cmd>cal setline(line('.'), getline(line('.')).'import pudb.remote; pudb.remote.set_trace(term_size=('.&columns.', '.(&lines-1).'))')<CR>"
+	,
 	{ noremap = true }
 )
 vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", { noremap = true })
@@ -403,6 +406,10 @@ require("nvim-treesitter.configs").setup({
 	autopairs = {
 		enable = true,
 	},
+	autotag = {
+		enable = true,
+		filetypes = { "html", "xml", "htmldjango" },
+	},
 	highlight = {
 		enable = true,
 	},
@@ -450,6 +457,9 @@ require("nvim-treesitter.configs").setup({
 		},
 	},
 })
+-- fixes autoclose tags with django.
+-- until (https://github.com/nvim-treesitter/nvim-treesitter/pull/3402)
+require("nvim-treesitter.parsers").filetype_to_parsername.htmldjango = "html"
 require("nvim-autopairs").setup({
 	check_ts = true,
 })
@@ -483,9 +493,14 @@ require("cmp").setup({
 		{ name = "luasnip" },
 	}, {
 		{ name = "buffer" },
+		{ name = "path" },
 	}),
 })
 
+
 -- Needs to be after cmp.
-require("tabout").setup({})
+require("tabout").setup({
+	tabkey = '',
+})
+vim.api.nvim_set_keymap('i', '<Tab>', "<Plug>(TaboutMulti)", { silent = true })
 -- vim: ts=4
