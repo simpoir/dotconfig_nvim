@@ -172,11 +172,6 @@ require("mason").setup()
 local lspconfig = require("lspconfig")
 local lsp_caps = require("cmp_nvim_lsp").default_capabilities()
 lspconfig.util.default_config["capabilities"] = lsp_caps
-lspconfig.pylsp.setup({
-	on_attach = function(client)
-		client.server_capabilities.document_formatting = false
-	end,
-})
 lspconfig.yamlls.setup({
 	settings = {
 		redhat = { telemetry = { enabled = false } },
@@ -194,9 +189,6 @@ lspconfig.rust_analyzer.setup({
 	settings = { ["rust-analyzer"] = { checkOnSave = { command = "clippy" } } },
 })
 lspconfig.sumneko_lua.setup({
-	on_attach = function(client)
-		client.server_capabilities.document_formatting = false
-	end,
 	settings = {
 		Lua = {
 			diagnostics = {
@@ -250,7 +242,9 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagn
 	signs = true,
 })
 vim.api.nvim_create_autocmd("CursorHold", { callback = vim.diagnostic.open_float })
-vim.api.nvim_create_autocmd("CursorHoldI", { callback = vim.lsp.buf.signature_help })
+-- I'm unsure about this one. It seems convenient but the errors I get from some lsp (e.g. ltex + markdown)
+-- makes me want to keep it off rather than whitelist the world.
+-- vim.api.nvim_create_autocmd("CursorHoldI", { callback = vim.lsp.buf.signature_help })
 
 ----------------------------------------
 -- Pretty Mappings
@@ -286,7 +280,7 @@ g.lmap = {
 	l = {
 		name = "Language",
 		d = { "luaeval('vim.lsp.buf.definition()')", "Definition" },
-		f = { "luaeval('vim.lsp.buf.formatting()')", "format" },
+		f = { "luaeval('vim.lsp.buf.format()')", "format" },
 		e = { "Trouble", "Diagnostics" },
 		h = { "luaeval('vim.lsp.buf.hover()')", "hover" },
 		i = { "luaeval('vim.lsp.buf.implementation()')", "Implementation" },
@@ -315,7 +309,7 @@ vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", { noremap 
 -- format on save for a select few types
 vim.api.nvim_create_autocmd("BufWritePre", {
 	pattern = { "*.go", "*.rs", "*.lua", "*.js" },
-	callback = vim.lsp.buf.formatting_sync,
+	callback = function() vim.lsp.buf.format() end,
 })
 vim.api.nvim_create_autocmd("BufReadPost", {
 	pattern = { "*.qml" },
@@ -503,4 +497,5 @@ require("tabout").setup({
 	tabkey = '',
 })
 vim.api.nvim_set_keymap('i', '<Tab>', "<Plug>(TaboutMulti)", { silent = true })
+vim.api.nvim_set_keymap('i', '<S-Tab>', "<Plug>(TaboutBackMulti)", { silent = true })
 -- vim: ts=4
