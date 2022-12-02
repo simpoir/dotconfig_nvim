@@ -135,7 +135,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
 	end,
 })
 
-opt.updatetime = 2000 -- time between keystrokes which is considered idle.
+opt.updatetime = 200 -- time between keystrokes which is considered idle.
 g.indentLine_char = "┊"
 g.indentLine_concealcursor = "c"
 
@@ -168,10 +168,29 @@ require("telescope").setup({
 require("mason-lspconfig").setup({
 	automatic_installation = true,
 })
+g.lsp_formatters_disabled = { "pylsp" }
+function FilteredFormat()
+	if vim.lsp.buf.format ~= nil then
+		vim.lsp.buf.format({
+			filter = function(client)
+				for _, v in ipairs(g.lsp_formatters_disabled) do
+					if v == client.name then
+						return false
+					end
+				end
+				return true
+			end,
+		})
+	else
+		-- nvim 7 fallback
+		vim.lsp.buf.formatting()
+	end
+end
+
 require("mason").setup()
 local lspconfig = require("lspconfig")
 local lsp_caps = require("cmp_nvim_lsp").default_capabilities()
-lspconfig.util.default_config["capabilities"] = lsp_caps
+lspconfig.util.default_config = vim.tbl_deep_extend("force", lspconfig.util.default_config, { capabilities = lsp_caps });
 lspconfig.yamlls.setup({
 	settings = {
 		redhat = { telemetry = { enabled = false } },
@@ -185,7 +204,6 @@ lspconfig.yamlls.setup({
 })
 
 lspconfig.rust_analyzer.setup({
-	-- capabilities = lsp_caps,
 	settings = { ["rust-analyzer"] = { checkOnSave = { command = "clippy" } } },
 })
 lspconfig.sumneko_lua.setup({
@@ -227,11 +245,13 @@ local nuls = require("null-ls")
 nuls.setup({
 	sources = {
 		-- nuls.builtins.formatting.stylua,
+		nuls.builtins.formatting.black,
 		nuls.builtins.formatting.isort,
 		-- method = nuls.builtins.formatting.yapf,
-		nuls.builtins.formatting.black,
 		nuls.builtins.diagnostics.fish,
-		nuls.builtins.diagnostics.flake8,
+		nuls.builtins.diagnostics.flake8.with({
+			extra_args = { "--max-line-length=120" },
+		}),
 		nuls.builtins.code_actions.shellcheck,
 	},
 })
@@ -241,7 +261,17 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagn
 	underline = true,
 	signs = true,
 })
-vim.api.nvim_create_autocmd("CursorHold", { callback = vim.diagnostic.open_float })
+vim.api.nvim_create_autocmd("CursorHold", {
+	callback = function()
+		for _, win in ipairs(vim.api.nvim_list_wins()) do
+			-- skip overriding existing floats
+			if vim.api.nvim_win_get_config(win).relative ~= '' then
+				return
+			end
+		end
+		vim.diagnostic.open_float({ relative = "editor", anchor = "SW", focusable = false })
+	end
+})
 -- I'm unsure about this one. It seems convenient but the errors I get from some lsp (e.g. ltex + markdown)
 -- makes me want to keep it off rather than whitelist the world.
 -- vim.api.nvim_create_autocmd("CursorHoldI", { callback = vim.lsp.buf.signature_help })
@@ -277,10 +307,17 @@ g.lmap = {
 		G = { ":Telescope live_grep", "Live Grep" },
 		t = { "NvimTreeToggle", "file Tree toggle" },
 	},
+	g = {
+		name = "Git",
+		s = { ":Git", "status" },
+		b = { ":Git blame", "blame" },
+		c = { ":Git commit", "commit" },
+		l = { ":Git log --graph --decorate", "log" },
+	},
 	l = {
 		name = "Language",
 		d = { "luaeval('vim.lsp.buf.definition()')", "Definition" },
-		f = { "luaeval('vim.lsp.buf.format()')", "format" },
+		f = { "v:lua.FilteredFormat()", "Format file" },
 		e = { "Trouble", "Diagnostics" },
 		h = { "luaeval('vim.lsp.buf.hover()')", "hover" },
 		i = { "luaeval('vim.lsp.buf.implementation()')", "Implementation" },
@@ -309,7 +346,7 @@ vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", { noremap 
 -- format on save for a select few types
 vim.api.nvim_create_autocmd("BufWritePre", {
 	pattern = { "*.go", "*.rs", "*.lua", "*.js" },
-	callback = function() vim.lsp.buf.format() end,
+	callback = FilteredFormat,
 })
 vim.api.nvim_create_autocmd("BufReadPost", {
 	pattern = { "*.qml" },
@@ -366,6 +403,7 @@ function DbgRustTests()
 		"cargo build -q --tests --message-format=json|jq -r 'select(.executable).executable'",
 	}):gsub("\n$", "")
 	local modname = fn.expand("%:r"):gsub("/", "::"):gsub("^src::", "")
+	print(modname)
 	dap.configurations.rust[1].program = tgt
 	dap.configurations.rust[1].args = { modname }
 	dap.continue()
@@ -409,7 +447,7 @@ require("nvim-treesitter.configs").setup({
 	},
 	indent = {
 		enable = true,
-		disable = { "yaml", "python" },
+		disable = { "yaml" },
 	},
 	matchup = {
 		enable = true,
@@ -460,8 +498,9 @@ require("nvim-autopairs").setup({
 
 local cmp = require("cmp")
 local luasnip = require("luasnip")
-require("cmp").setup({
+cmp.setup({
 	enabled = true,
+	preselect = cmp.PreselectMode.None, -- avoid sticking to the first match
 	snippet = {
 		expand = function(args)
 			require("luasnip").lsp_expand(args.body) -- For `luasnip` users.
