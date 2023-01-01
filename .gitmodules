@@ -193,3 +193,6 @@
 [submodule "site/pack/simpoir/opt/nvim-ts-autotag"]
 	path = site/pack/simpoir/opt/nvim-ts-autotag
 	url = https://github.com/windwp/nvim-ts-autotag
+[submodule "site/pack/simpoir/opt/nvim-dap-virtual-text"]
+	path = site/pack/simpoir/opt/nvim-dap-virtual-text
+	url = https://github.com/theHamsta/nvim-dap-virtual-text

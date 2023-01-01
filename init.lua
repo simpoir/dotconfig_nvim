@@ -51,6 +51,7 @@ local packs = {
 	"williamboman/mason-lspconfig.nvim",
 	"neovim/nvim-lspconfig", -- common configs for LSP
 	"mfussenegger/nvim-dap", -- debug adapter protocol
+	"theHamsta/nvim-dap-virtual-text", -- show variables inline in debug
 	"nvim-lua/plenary.nvim", -- lua boilerplate, for null-ls
 	"jose-elias-alvarez/null-ls.nvim", -- extra linting/formatting
 
@@ -111,6 +112,7 @@ opt.shell = "/bin/bash"
 ----------------------------------------
 -- Look and feel
 ----------------------------------------
+opt.scrolloff = 5 -- scroll margin
 require("simpoir.ui").setup({
 	theme = "molokai",
 })
@@ -183,7 +185,7 @@ function FilteredFormat()
 		})
 	else
 		-- nvim 7 fallback
-		vim.lsp.buf.formatting()
+		vim.lsp.buf.formatting_sync()
 	end
 end
 
@@ -294,6 +296,7 @@ g.lmap = {
 		b = { "luaeval('require\"dap\".toggle_breakpoint()')", "Break" },
 		n = { "luaeval('require\"dap\".step_over()')", "Next" },
 		x = { "luaeval('require\"dap\".repl.open()')", "Eval" },
+		s = { "luaeval('require\"dap.ui.widgets\".sidebar(require\"dap.ui.widgets\".scopes).open()')", "Scopes" },
 		c = { "luaeval('require\"dap\".continue()')", "Continue" },
 		t = { "v:lua.DbgRustTests()", "Debug tests" },
 	},
@@ -403,9 +406,8 @@ function DbgRustTests()
 		"cargo build -q --tests --message-format=json|jq -r 'select(.executable).executable'",
 	}):gsub("\n$", "")
 	local modname = fn.expand("%:r"):gsub("/", "::"):gsub("^src::", "")
-	print(modname)
 	dap.configurations.rust[1].program = tgt
-	dap.configurations.rust[1].args = { modname }
+	dap.configurations.rust[1].args = { "--nocapture", modname }
 	dap.continue()
 end
 
@@ -417,19 +419,33 @@ dap.adapters.lldb = {
 	command = "/usr/bin/lldb-vscode-14",
 	name = "lldb",
 }
+dap.adapters.cppdbg = {
+	type = "executable",
+	command = fn.environ().HOME .. "/.local/share/nvim/mason/bin/OpenDebugAD7",
+	args = { "--trace" },
+	name = "cppdbg",
+	id = "cppdbg", -- PSA don't change this.
+}
 dap.configurations.rust = {
 	{
 		name = "Launch",
-		type = "lldb",
+		type = "cppdbg",
 		request = "launch",
+		MIMode = "gdb",
+		miDebuggerPath = fn.environ().HOME .. "/.cargo/bin/rust-gdb",
 		program = function()
 			return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
 		end,
 		cwd = "${workspaceFolder}",
-		stopOnEntry = false,
 		args = {},
 	},
 }
+vim.api.nvim_set_keymap("", "<F5>", "<cmd>lua require 'dap'.step_into()<CR>", { noremap = true })
+vim.api.nvim_set_keymap("", "<F6>", "<cmd>lua require 'dap'.step_over()<CR>", { noremap = true })
+vim.api.nvim_set_keymap("i", "<F6>", "<cmd>lua require 'dap'.step_over()<CR>", { noremap = true })
+vim.api.nvim_set_keymap("", "<F7>", "<cmd>lua require 'dap'.continue()<CR>", { noremap = true })
+vim.api.nvim_set_keymap("", "<F8>", "<cmd>lua require 'dap'.toggle_breakpoint()<CR>", { noremap = true })
+require("nvim-dap-virtual-text").setup()
 
 require("nvim-treesitter.configs").setup({
 	ensure_installed = { "c", "lua", "python", "rust" },
@@ -447,7 +463,8 @@ require("nvim-treesitter.configs").setup({
 	},
 	indent = {
 		enable = true,
-		disable = { "yaml" },
+		-- syntax-based indent isn't an option with indent-scoped formats
+		disable = { "yaml", "python" },
 	},
 	matchup = {
 		enable = true,
@@ -467,6 +484,7 @@ require("nvim-treesitter.configs").setup({
 				["ac"] = "@class.outer",
 				-- you can optionally set descriptions to the mappings (used in the desc parameter of nvim_buf_set_keymap
 				["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
+				["aa"] = "@parameter.outer",
 			},
 
 			-- You can choose the select mode (default is charwise 'v')
@@ -535,6 +553,7 @@ cmp.setup({
 require("tabout").setup({
 	tabkey = '',
 })
-vim.api.nvim_set_keymap('i', '<Tab>', "<Plug>(TaboutMulti)", { silent = true })
+-- No one uses c-j instead of newlines, and tab clashes with the need to indent.
+vim.api.nvim_set_keymap('i', '<C-J>', "<Plug>(TaboutMulti)", { silent = true })
 vim.api.nvim_set_keymap('i', '<S-Tab>', "<Plug>(TaboutBackMulti)", { silent = true })
 -- vim: ts=4
