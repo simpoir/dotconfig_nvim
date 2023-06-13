@@ -47,13 +47,14 @@ function M.setup(opts)
 		end,
 	})
 	vim.api.nvim_create_autocmd("User", {
-		pattern =  "Startified",
+		pattern = "Startified",
 		callback = function()
 			opt.cursorline = true
 		end,
 	})
 
 	g.neovide_cursor_vfx_mode = "railgun"
+	g.neovide_transparency = 0.95
 	g.neovide_refresh_rate = 20
 	g.airline_powerline_fonts = 1
 	g["airline#extensions#tabline#enabled"] = 1
@@ -69,6 +70,14 @@ function M.setup(opts)
 	opt.guicursor = "n:blinkon1"
 	opt.completeopt = "noinsert,menuone,noselect"
 end
+
+require("nvim-tree").setup {
+	actions = {
+		open_file = {
+			quit_on_open = true,
+		},
+	},
+}
 
 return M
 -- vim: ts=4

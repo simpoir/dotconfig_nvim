@@ -196,3 +196,15 @@
 [submodule "site/pack/simpoir/opt/nvim-dap-virtual-text"]
 	path = site/pack/simpoir/opt/nvim-dap-virtual-text
 	url = https://github.com/theHamsta/nvim-dap-virtual-text
+[submodule "site/pack/simpoir/opt/ShowMarks"]
+	path = site/pack/simpoir/opt/ShowMarks
+	url = https://github.com/vim-scripts/ShowMarks
+[submodule "site/pack/simpoir/opt/ex-showmarks"]
+	path = site/pack/simpoir/opt/ex-showmarks
+	url = https://github.com/exvim/ex-showmarks
+[submodule "site/pack/simpoir/opt/jinja.vim"]
+	path = site/pack/simpoir/opt/jinja.vim
+	url = https://github.com/HiPhish/jinja.vim
+[submodule "site/pack/simpoir/opt/firenvim"]
+	path = site/pack/simpoir/opt/firenvim
+	url = https://github.com/glacambre/firenvim

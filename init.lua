@@ -44,6 +44,7 @@ local packs = {
 	"liuchengxu/vim-which-key", -- the backslash menu
 	"justincampbell/vim-eighties", -- auto 80col resizer
 	"yggdroot/indentLine", -- show line indentation
+	"exvim/ex-showmarks", -- show (book)marks in gutter
 
 	-- LSP and IDE lang stack
 	----------------------------------------
@@ -54,6 +55,7 @@ local packs = {
 	"theHamsta/nvim-dap-virtual-text", -- show variables inline in debug
 	"nvim-lua/plenary.nvim", -- lua boilerplate, for null-ls
 	"jose-elias-alvarez/null-ls.nvim", -- extra linting/formatting
+	"HiPhish/jinja.vim", -- non-TS jinja syntax
 
 	-- Coding
 	----------------------------------------
@@ -103,6 +105,12 @@ local packs = {
 	"kyazdani42/nvim-web-devicons", -- file tree
 	"majutsushi/tagbar", -- taglist panel
 	"romainl/vim-cool", -- auto-toggle hls
+	{
+		"glacambre/firenvim",
+		post_inst = function()
+			vim.fn["firenvim#install"](0)
+		end,
+	}, -- embed into browser
 }
 require("simpoir.packman").setup(packs)
 
@@ -112,6 +120,7 @@ opt.shell = "/bin/bash"
 ----------------------------------------
 -- Look and feel
 ----------------------------------------
+opt.clipboard = "unnamedplus"
 opt.scrolloff = 5 -- scroll margin
 require("simpoir.ui").setup({
 	theme = "molokai",
@@ -125,15 +134,10 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 })
 -- autoclose tree with last buffer
 vim.api.nvim_create_autocmd("BufEnter", {
-	group = vim.api.nvim_create_augroup("NvimTreeClose", { clear = true }),
+	group = vim.api.nvim_create_augroup("", { clear = true }),
+	nested = true,
 	callback = function()
-		local layout = vim.api.nvim_call_function("winlayout", {})
-		if layout[1] == "leaf"
-			and vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(layout[2]), "filetype") == "NvimTree"
-			and layout[3] == nil
-		then
-			cmd("quit")
-		end
+		cmd("if winnr('$') == 1 && bufname() == 'NvimTree_'.tabpagenr() | quit | endif")
 	end,
 })
 
@@ -153,6 +157,15 @@ g.signify_vcs_cmds = { bzr = "bzr diff --diff-options=-U0 -- %f" }
 require("nvim-tree").setup({
 	view = {
 		width = 30,
+		float = {
+			enable = true,
+			quit_on_focus_loss = true,
+			open_win_config = {
+				anchor = "NW",
+				border = "solid",
+				height = 999,
+			},
+		},
 	},
 	filters = {
 		dotfiles = true,
@@ -161,6 +174,11 @@ require("nvim-tree").setup({
 require("telescope").setup({
 	defaults = {
 		-- no_ignore_parent = true,
+		mappings = {
+			i = {
+				["<esc>"] = require("telescope.actions").close,
+			},
+		},
 	},
 })
 
@@ -170,7 +188,7 @@ require("telescope").setup({
 require("mason-lspconfig").setup({
 	automatic_installation = true,
 })
-g.lsp_formatters_disabled = { "pylsp" }
+g.lsp_formatters_disabled = { "pylsp", "lua_ls" }
 function FilteredFormat()
 	if vim.lsp.buf.format ~= nil then
 		vim.lsp.buf.format({
@@ -192,7 +210,7 @@ end
 require("mason").setup()
 local lspconfig = require("lspconfig")
 local lsp_caps = require("cmp_nvim_lsp").default_capabilities()
-lspconfig.util.default_config = vim.tbl_deep_extend("force", lspconfig.util.default_config, { capabilities = lsp_caps });
+lspconfig.util.default_config = vim.tbl_deep_extend("force", lspconfig.util.default_config, { capabilities = lsp_caps })
 lspconfig.yamlls.setup({
 	settings = {
 		redhat = { telemetry = { enabled = false } },
@@ -200,6 +218,13 @@ lspconfig.yamlls.setup({
 			schemas = {
 				["https://cdn.jsdelivr.net/gh/techhat/openrecipeformat/schema.json"] = "*.orf.yml",
 				["https://cdn.jsdelivr.net/gh/cappyzawa/concourse-pipeline-jsonschema@v6.5.0/concourse_jsonschema.json"] = "pipeline.yml",
+				["/home/simpoir/Source/scratchpad/jjb.schema"] = "jenkins/**/*",
+			},
+			customTags = {
+				"!include:",
+				"!include-jinja2:",
+				"!include-raw-escape:",
+				"!include-jinja2",
 			},
 		},
 	},
@@ -208,9 +233,12 @@ lspconfig.yamlls.setup({
 lspconfig.rust_analyzer.setup({
 	settings = { ["rust-analyzer"] = { checkOnSave = { command = "clippy" } } },
 })
-lspconfig.sumneko_lua.setup({
+lspconfig.lua_ls.setup({
 	settings = {
 		Lua = {
+			runtime = {
+				version = "LuaJIT",
+			},
 			diagnostics = {
 				globals = { "vim" },
 			},
@@ -218,9 +246,26 @@ lspconfig.sumneko_lua.setup({
 				library = {
 					[vim.fn.expand("$VIMRUNTIME/lua")] = true,
 					[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
+					["/usr/share/awesome/lib"] = true,
 				},
 				maxPreload = 10000,
 				preloadFileSize = 10000,
+				checkThirdParty = false,
+			},
+			telemetry = {
+				enable = false,
+			},
+		},
+	},
+})
+lspconfig.pyright.setup({
+	settings = {
+		python = {
+			analysis = {
+				useLibraryCodeForTypes = true,
+				diagnosticSeverityOverrides = {
+					reportPrivateImportUsage = "none",
+				},
 			},
 		},
 	},
@@ -246,7 +291,7 @@ opt.tabstop = 2
 local nuls = require("null-ls")
 nuls.setup({
 	sources = {
-		-- nuls.builtins.formatting.stylua,
+		nuls.builtins.formatting.stylua,
 		nuls.builtins.formatting.black,
 		nuls.builtins.formatting.isort,
 		-- method = nuls.builtins.formatting.yapf,
@@ -267,12 +312,12 @@ vim.api.nvim_create_autocmd("CursorHold", {
 	callback = function()
 		for _, win in ipairs(vim.api.nvim_list_wins()) do
 			-- skip overriding existing floats
-			if vim.api.nvim_win_get_config(win).relative ~= '' then
+			if vim.api.nvim_win_get_config(win).relative ~= "" then
 				return
 			end
 		end
 		vim.diagnostic.open_float({ relative = "editor", anchor = "SW", focusable = false })
-	end
+	end,
 })
 -- I'm unsure about this one. It seems convenient but the errors I get from some lsp (e.g. ltex + markdown)
 -- makes me want to keep it off rather than whitelist the world.
@@ -296,18 +341,19 @@ g.lmap = {
 		b = { "luaeval('require\"dap\".toggle_breakpoint()')", "Break" },
 		n = { "luaeval('require\"dap\".step_over()')", "Next" },
 		x = { "luaeval('require\"dap\".repl.open()')", "Eval" },
-		s = { "luaeval('require\"dap.ui.widgets\".sidebar(require\"dap.ui.widgets\".scopes).open()')", "Scopes" },
+		s = { 'luaeval(\'require"dap.ui.widgets".sidebar(require"dap.ui.widgets".scopes).open()\')', "Scopes" },
 		c = { "luaeval('require\"dap\".continue()')", "Continue" },
 		t = { "v:lua.DbgRustTests()", "Debug tests" },
 	},
 	f = {
 		name = "Files",
 		a = { "v:lua.Alternate()", "jump to Alternate file." },
+		b = { ":Telescope buffers", "Find buffer" },
 		c = { "v:lua.BufGone()", "Close buffer and switch to next" },
 		d = { ":e $MYVIMRC", "Open dotfile" },
 		f = { ":Telescope find_files", "Find file" },
-		g = { ":Grepper -tool rg", "Grep" },
-		G = { ":Telescope live_grep", "Live Grep" },
+		G = { ":lua require'telescope.builtin'.live_grep{default_text=vim.fn.expand('<cword>')}", "Grep cursor" },
+		g = { ":Telescope live_grep", "Live Grep" },
 		t = { "NvimTreeToggle", "file Tree toggle" },
 	},
 	g = {
@@ -340,8 +386,7 @@ g.lmap = {
 vim.api.nvim_set_keymap(
 	"i",
 	"rpudb",
-	"<cmd>cal setline(line('.'), getline(line('.')).'import pudb.remote; pudb.remote.set_trace(term_size=('.&columns.', '.(&lines-1).'))')<CR>"
-	,
+	"<cmd>cal setline(line('.'), getline(line('.')).'import pudb.remote; pudb.remote.set_trace(term_size=('.&columns.', '.(&lines-1).'))')<CR>",
 	{ noremap = true }
 )
 vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", { noremap = true })
@@ -508,8 +553,7 @@ require("nvim-treesitter.configs").setup({
 	},
 })
 -- fixes autoclose tags with django.
--- until (https://github.com/nvim-treesitter/nvim-treesitter/pull/3402)
-require("nvim-treesitter.parsers").filetype_to_parsername.htmldjango = "html"
+vim.treesitter.language.register("htmldjango", "html")
 require("nvim-autopairs").setup({
 	check_ts = true,
 })
@@ -517,7 +561,12 @@ require("nvim-autopairs").setup({
 local cmp = require("cmp")
 local luasnip = require("luasnip")
 cmp.setup({
-	enabled = true,
+	enabled = function()
+		local buftype = vim.api.nvim_buf_get_option(0, "buftype")
+		if buftype == "prompt" then
+			return false
+		end
+	end,
 	preselect = cmp.PreselectMode.None, -- avoid sticking to the first match
 	snippet = {
 		expand = function(args)
@@ -543,17 +592,17 @@ cmp.setup({
 		{ name = "nvim_lsp" },
 		{ name = "luasnip" },
 	}, {
-		{ name = "buffer" },
+		-- complete from all bufs, like default vim
+		{ name = "buffer", option = { get_bufnrs = vim.api.nvim_list_bufs } },
 		{ name = "path" },
 	}),
 })
 
-
 -- Needs to be after cmp.
 require("tabout").setup({
-	tabkey = '',
+	tabkey = "",
 })
 -- No one uses c-j instead of newlines, and tab clashes with the need to indent.
-vim.api.nvim_set_keymap('i', '<C-J>', "<Plug>(TaboutMulti)", { silent = true })
-vim.api.nvim_set_keymap('i', '<S-Tab>', "<Plug>(TaboutBackMulti)", { silent = true })
+vim.api.nvim_set_keymap("i", "<C-J>", "<Plug>(TaboutMulti)", { silent = true })
+vim.api.nvim_set_keymap("i", "<S-Tab>", "<Plug>(TaboutBackMulti)", { silent = true })
 -- vim: ts=4
