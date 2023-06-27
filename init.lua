@@ -120,7 +120,14 @@ opt.shell = "/bin/bash"
 ----------------------------------------
 -- Look and feel
 ----------------------------------------
+-- merge w. global clipboard
 opt.clipboard = "unnamedplus"
+
+-- avoid switching to subdirs when opening project files.
+-- Rooter will switch to the project root.
+opt.autochdir = false
+g.startify_change_to_dir = false
+
 opt.scrolloff = 5 -- scroll margin
 require("simpoir.ui").setup({
 	theme = "molokai",
@@ -151,7 +158,7 @@ g.indentLine_concealcursor = "c"
 g.localvimrc_persistent = 1
 g.localvimrc_name = { ".lvimrc", ".lvimrc.lua", "_vimrc_local.vim" }
 g.rooter_change_directory_for_non_project_files = "current" -- soothes LSP in home dir
-g.rooter_patterns = { ".git", ".bzr", "Makefile", "Cargo.toml" }
+g.rooter_patterns = { ".git", ".bzr", "Makefile", "Cargo.toml", "debian" }
 g.signify_vcs_cmds = { bzr = "bzr diff --diff-options=-U0 -- %f" }
 
 require("nvim-tree").setup({
@@ -459,6 +466,11 @@ end
 cmd("command DbgRustTests lua DbgRustTests()")
 
 local dap = require("dap")
+dap.defaults.fallback.force_external_terminal = true
+dap.defaults.fallback.external_terminal = {
+	command = "/usr/bin/gnome-terminal",
+	args = { "--" },
+}
 dap.adapters.lldb = {
 	type = "executable",
 	command = "/usr/bin/lldb-vscode-14",
@@ -470,6 +482,19 @@ dap.adapters.cppdbg = {
 	args = { "--trace" },
 	name = "cppdbg",
 	id = "cppdbg", -- PSA don't change this.
+}
+dap.configurations.c = {
+	{
+		name = "Launch gdb",
+		type = "cppdbg",
+		request = "launch",
+		MIMode = "gdb",
+		program = function()
+			g.program = vim.fn.input("Path to executable: ", g.program or "", "file")
+			return g.program
+		end,
+		cwd = "${workspaceFolder}",
+	},
 }
 dap.configurations.rust = {
 	{
