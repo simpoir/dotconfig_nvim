@@ -208,3 +208,6 @@
 [submodule "site/pack/simpoir/opt/firenvim"]
 	path = site/pack/simpoir/opt/firenvim
 	url = https://github.com/glacambre/firenvim
+[submodule "site/pack/simpoir/opt/coq_nvim"]
+	path = site/pack/simpoir/opt/coq_nvim
+	url = https://github.com/ms-jpq/coq_nvim

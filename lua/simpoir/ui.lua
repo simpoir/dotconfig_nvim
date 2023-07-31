@@ -71,13 +71,13 @@ function M.setup(opts)
 	opt.completeopt = "noinsert,menuone,noselect"
 end
 
-require("nvim-tree").setup {
+require("nvim-tree").setup({
 	actions = {
 		open_file = {
 			quit_on_open = true,
 		},
 	},
-}
+})
 
 return M
 -- vim: ts=4

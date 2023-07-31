@@ -62,14 +62,7 @@ local packs = {
 	"mhinz/vim-startify",
 	"embear/vim-localvimrc", -- .lvimrc support
 	"janko-m/vim-test", -- generic test runner
-	"ray-x/lsp_signature.nvim", -- the nice floating preview with highlights
-	"hrsh7th/cmp-nvim-lsp",
-	"hrsh7th/cmp-path",
-	"hrsh7th/cmp-buffer",
-	"hrsh7th/cmp-cmdline",
-	"saadparwaiz1/cmp_luasnip",
-	"L3MON4D3/LuaSnip",
-	"hrsh7th/nvim-cmp",
+	"ms-jpq/coq_nvim", -- modern completion and snippets
 
 	-- Syntax
 	----------------------------------------
@@ -89,7 +82,6 @@ local packs = {
 	"tpope/vim-surround",
 	"tpope/vim-commentary",
 	"windwp/nvim-autopairs", -- autoclose pairs
-	"abecodes/tabout.nvim", -- jumps out of pairs
 
 	-- Tooling
 	----------------------------------------
@@ -130,8 +122,10 @@ g.startify_change_to_dir = false
 
 opt.scrolloff = 5 -- scroll margin
 require("simpoir.ui").setup({
-	theme = "molokai",
+	theme = "monokai-phoenix",
 })
+-- Override all themes to make cursor visible (blink) in paren matching
+vim.api.nvim_set_hl(0, "MatchParen", { bg = "red", fg = "cyan" })
 g.eighties_bufname_additional_patterns = { "fugitiveblame", "NvimTree" }
 
 vim.api.nvim_create_autocmd("BufReadPost", {
@@ -195,7 +189,7 @@ require("telescope").setup({
 require("mason-lspconfig").setup({
 	automatic_installation = true,
 })
-g.lsp_formatters_disabled = { "pylsp", "lua_ls" }
+g.lsp_formatters_disabled = { "pylsp", "jedi_language_server", "lua_ls" }
 function FilteredFormat()
 	if vim.lsp.buf.format ~= nil then
 		vim.lsp.buf.format({
@@ -214,10 +208,24 @@ function FilteredFormat()
 	end
 end
 
+g.coq_settings = {
+	auto_start = true,
+	keymap = { jump_to_mark = "<c-j>" },
+	clients = {
+		buffers = {
+			-- disabled in favor of manual trigger through c-n
+			enabled = false,
+		},
+		lsp = { resolve_timeout = 10000 },
+	},
+}
+
 require("mason").setup()
 local lspconfig = require("lspconfig")
-local lsp_caps = require("cmp_nvim_lsp").default_capabilities()
-lspconfig.util.default_config = vim.tbl_deep_extend("force", lspconfig.util.default_config, { capabilities = lsp_caps })
+-- auto set caps through setup hook
+lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(config)
+	config.capabilities = require("coq").lsp_ensure_capabilities(config).capabilities
+end)
 lspconfig.yamlls.setup({
 	settings = {
 		redhat = { telemetry = { enabled = false } },
@@ -265,18 +273,18 @@ lspconfig.lua_ls.setup({
 		},
 	},
 })
-lspconfig.pyright.setup({
-	settings = {
-		python = {
-			analysis = {
-				useLibraryCodeForTypes = true,
-				diagnosticSeverityOverrides = {
-					reportPrivateImportUsage = "none",
-				},
-			},
-		},
-	},
-})
+-- lspconfig.pyright.setup({
+-- 	settings = {
+-- 		python = {
+-- 			analysis = {
+-- 				useLibraryCodeForTypes = true,
+-- 				diagnosticSeverityOverrides = {
+-- 					reportPrivateImportUsage = "none",
+-- 				},
+-- 			},
+-- 		},
+-- 	},
+-- })
 
 -- auto setup other installed servers
 for _, srv in ipairs(require("mason-lspconfig").get_installed_servers()) do
@@ -285,18 +293,21 @@ for _, srv in ipairs(require("mason-lspconfig").get_installed_servers()) do
 		lspconfig[srv].setup({})
 	end
 end
--- lspconfig.ltex.setup({})
+lspconfig.ltex.setup({
+	filetypes = { "bib", "gitcommit", "markdown", "org", "plaintex", "rst", "rnoweb", "tex", "pandoc", "mail" },
+})
 -- lspconfig.vimls.setup({})
 -- lspconfig.gopls.setup({})
 
-require("lsp_signature").setup({
-	zindex = 1,
-})
+-- require("lsp_signature").setup({
+-- 	zindex = 1,
+-- })
 
 -- non-lsp lang bits
 opt.tabstop = 2
 local nuls = require("null-ls")
 nuls.setup({
+	autostart = true,
 	sources = {
 		nuls.builtins.formatting.stylua,
 		nuls.builtins.formatting.black,
@@ -397,6 +408,7 @@ vim.api.nvim_set_keymap(
 	{ noremap = true }
 )
 vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", { noremap = true })
+vim.api.nvim_set_keymap("i", "{<cr>", "{<cr>}<esc>O", { noremap = true })
 
 -- format on save for a select few types
 vim.api.nvim_create_autocmd("BufWritePre", {
@@ -533,8 +545,9 @@ require("nvim-treesitter.configs").setup({
 	},
 	indent = {
 		enable = true,
-		-- syntax-based indent isn't an option with indent-scoped formats
-		disable = { "yaml", "python" },
+		-- syntax-based indent wasn't an option with indent-scoped formats
+		-- It's getting better.
+		-- disable = { "yaml", "python" },
 	},
 	matchup = {
 		enable = true,
@@ -582,52 +595,4 @@ vim.treesitter.language.register("htmldjango", "html")
 require("nvim-autopairs").setup({
 	check_ts = true,
 })
-
-local cmp = require("cmp")
-local luasnip = require("luasnip")
-cmp.setup({
-	enabled = function()
-		local buftype = vim.api.nvim_buf_get_option(0, "buftype")
-		if buftype == "prompt" then
-			return false
-		end
-	end,
-	preselect = cmp.PreselectMode.None, -- avoid sticking to the first match
-	snippet = {
-		expand = function(args)
-			require("luasnip").lsp_expand(args.body) -- For `luasnip` users.
-		end,
-	},
-	window = {
-		completion = cmp.config.window.bordered(),
-		documentation = cmp.config.window.bordered(),
-	},
-	mapping = cmp.mapping.preset.insert({
-		["<Tab>"] = function(fallback)
-			if cmp.visible() then
-				cmp.confirm({ select = true })
-			elseif luasnip.expand_or_locally_jumpable() then
-				luasnip.expand_or_jump()
-			else
-				fallback()
-			end
-		end,
-	}),
-	sources = cmp.config.sources({
-		{ name = "nvim_lsp" },
-		{ name = "luasnip" },
-	}, {
-		-- complete from all bufs, like default vim
-		{ name = "buffer", option = { get_bufnrs = vim.api.nvim_list_bufs } },
-		{ name = "path" },
-	}),
-})
-
--- Needs to be after cmp.
-require("tabout").setup({
-	tabkey = "",
-})
--- No one uses c-j instead of newlines, and tab clashes with the need to indent.
-vim.api.nvim_set_keymap("i", "<C-J>", "<Plug>(TaboutMulti)", { silent = true })
-vim.api.nvim_set_keymap("i", "<S-Tab>", "<Plug>(TaboutBackMulti)", { silent = true })
 -- vim: ts=4
