@@ -59,10 +59,11 @@ local packs = {
 
 	-- Coding
 	----------------------------------------
-	"mhinz/vim-startify",
+	"goolord/alpha-nvim",
 	"embear/vim-localvimrc", -- .lvimrc support
 	"janko-m/vim-test", -- generic test runner
 	"ms-jpq/coq_nvim", -- modern completion and snippets
+	"ms-jpq/coq.artifacts",
 
 	-- Syntax
 	----------------------------------------
@@ -106,6 +107,9 @@ local packs = {
 }
 require("simpoir.packman").setup(packs)
 
+-- presentation mode
+require("simpoir.slide").setup()
+
 -- compat
 opt.shell = "/bin/bash"
 
@@ -114,6 +118,8 @@ opt.shell = "/bin/bash"
 ----------------------------------------
 -- merge w. global clipboard
 opt.clipboard = "unnamedplus"
+
+g.Todo_fold_char = ""
 
 -- avoid switching to subdirs when opening project files.
 -- Rooter will switch to the project root.
@@ -158,7 +164,8 @@ g.signify_vcs_cmds = { bzr = "bzr diff --diff-options=-U0 -- %f" }
 require("nvim-tree").setup({
 	view = {
 		width = 30,
-		float = {
+		--[[
+		float =
 			enable = true,
 			quit_on_focus_loss = true,
 			open_win_config = {
@@ -167,6 +174,7 @@ require("nvim-tree").setup({
 				height = 999,
 			},
 		},
+		--]]
 	},
 	filters = {
 		dotfiles = true,
@@ -216,8 +224,10 @@ g.coq_settings = {
 			-- disabled in favor of manual trigger through c-n
 			enabled = false,
 		},
-		lsp = { resolve_timeout = 10000 },
 	},
+	-- disable until I find what makes it double complete.
+	-- e.g. String::f| -> TAB -> String::ffrom
+	completion = { always = false },
 }
 
 require("mason").setup()
@@ -234,6 +244,7 @@ lspconfig.yamlls.setup({
 				["https://cdn.jsdelivr.net/gh/techhat/openrecipeformat/schema.json"] = "*.orf.yml",
 				["https://cdn.jsdelivr.net/gh/cappyzawa/concourse-pipeline-jsonschema@v6.5.0/concourse_jsonschema.json"] = "pipeline.yml",
 				["/home/simpoir/Source/scratchpad/jjb.schema"] = "jenkins/**/*",
+				["https://raw.githubusercontent.com/canonical/cloud-init/main/cloudinit/config/schemas/schema-cloud-config-v1.json"] = "*.cloud",
 			},
 			customTags = {
 				"!include:",
@@ -294,7 +305,7 @@ for _, srv in ipairs(require("mason-lspconfig").get_installed_servers()) do
 	end
 end
 lspconfig.ltex.setup({
-	filetypes = { "bib", "gitcommit", "markdown", "org", "plaintex", "rst", "rnoweb", "tex", "pandoc", "mail" },
+	filetypes = { "bib", "gitcommit", "markdown", "org", "text", "plaintex", "rst", "rnoweb", "tex", "pandoc", "mail" },
 })
 -- lspconfig.vimls.setup({})
 -- lspconfig.gopls.setup({})
@@ -322,7 +333,7 @@ nuls.setup({
 })
 
 vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
-	virtual_text = false,
+	virtual_text = true,
 	underline = true,
 	signs = true,
 })

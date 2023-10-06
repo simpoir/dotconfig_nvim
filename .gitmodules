@@ -211,3 +211,9 @@
 [submodule "site/pack/simpoir/opt/coq_nvim"]
 	path = site/pack/simpoir/opt/coq_nvim
 	url = https://github.com/ms-jpq/coq_nvim
+[submodule "site/pack/simpoir/opt/alpha-nvim"]
+	path = site/pack/simpoir/opt/alpha-nvim
+	url = https://github.com/goolord/alpha-nvim
+[submodule "site/pack/simpoir/opt/coq.artifacts"]
+	path = site/pack/simpoir/opt/coq.artifacts
+	url = https://github.com/ms-jpq/coq.artifacts
