@@ -19,10 +19,12 @@ function M.setup(packs)
 	local has_errors = false
 	for i, pack in ipairs(packs) do
 		local eager = false
+		local config = function() end
 		if type(pack) == "table" then
 			local pack_opt = pack
 			pack = pack[1]
 			eager = pack_opt["eager"]
+			config = pack_opt["config"] or config
 		end
 		local p = string.gsub(pack, "^[^/]+/", "")
 		local pack_dir = packs_dir .. p
@@ -63,6 +65,7 @@ function M.setup(packs)
 			print("Issue loading pack", p)
 			has_errors = true
 		end
+		config()
 		for k, v in pairs(breadcrumbs) do
 			if v == p then
 				table.remove(breadcrumbs, k)
