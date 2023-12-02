@@ -333,10 +333,10 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagn
 ----------------------------------------
 -- Pretty Mappings
 ----------------------------------------
-fn["which_key#register"]("Leader", "g:lmap")
-vim.api.nvim_set_keymap("n", "<leader>", "<cmd>WhichKey 'Leader'<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("v", "<leader>", "<cmd>WhichKeyVisual 'Leader'<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("v", "<leader>ev", "<Plug>(extractVariableVisual)", { noremap = true, silent = true })
+fn["which_key#register"]("<Space>", "g:lmap")
+vim.api.nvim_set_keymap("n", "<Space>", "<cmd>WhichKey '<Space>'<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<Space>", "<cmd>WhichKeyVisual '<Space>'<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<Space>ev", "<Plug>(extractVariableVisual)", { noremap = true, silent = true })
 g.lmap = {
 	name = "Global",
 	c = {
@@ -372,12 +372,13 @@ g.lmap = {
 	},
 	l = {
 		name = "Language",
+		a = { "luaeval('vim.lsp.buf.code_action()')", "Actions" },
 		d = { "luaeval('vim.lsp.buf.definition()')", "Definition" },
 		f = { "v:lua.FilteredFormat()", "Format file" },
 		e = { "Trouble", "Diagnostics" },
 		h = { "luaeval('vim.lsp.buf.hover()')", "hover" },
 		i = { "luaeval('vim.lsp.buf.implementation()')", "Implementation" },
-		q = { "luaeval('vim.lsp.buf.code_action()')", "Quick-fix" },
+		I = { "LspInfo", "Lsp Info" },
 		r = { "luaeval('vim.lsp.buf.rename()')", "Rename symbol" },
 		R = { "luaeval('vim.lsp.buf.references()')", "Find References" },
 		S = { "Mason", "Install" },
@@ -587,4 +588,52 @@ vim.treesitter.language.register("htmldjango", "html")
 require("nvim-autopairs").setup({
 	check_ts = true,
 })
+
+----------------------------------------
+-- Helix zone.
+-- Here are bits which I liked trying out Helix.
+----------------------------------------
+
+-- Helix-style syntactic incremental selection. Alt-i Alt-o
+VisualNode = {}
+function VisualBlockNode(pop)
+	if pop then
+		if #VisualNode then
+			VisualNode[#VisualNode] = nil
+		end
+		if #VisualNode then
+			VisualNode[#VisualNode] = nil
+		end
+	end
+	if vim.fn.mode() == "v" and #VisualNode > 0 then
+		VisualNode[#VisualNode + 1] = VisualNode[#VisualNode]:parent()
+		vim.cmd("normal! v")
+	else
+		VisualNode = { vim.treesitter.get_node() }
+	end
+	if not VisualNode[#VisualNode] then
+		return
+	end
+	local node = VisualNode[#VisualNode]
+	local start_l, start_c = node:start()
+	local end_l, end_c = node:end_()
+	vim.fn.cursor(start_l + 1, start_c + 1)
+	vim.cmd("normal! v")
+	vim.fn.cursor(end_l + 1, end_c)
+end
+vim.api.nvim_set_keymap("v", "<A-o>", "<cmd>lua VisualBlockNode()<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<A-o>", "<cmd>lua VisualBlockNode()<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<A-i>", "<cmd>lua VisualBlockNode(true)<cr>", { noremap = true, silent = true })
+
+-- shift-k already was used for showing manpages. Hijack to show any LSP documentation.
+vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<cr>", { noremap = true, silent = true })
+-- map commenting to ctrl-c, helix-style
+vim.api.nvim_set_keymap("n", "<C-c>", "<cmd>Commentary<cr>", { noremap = true, silent = true, desc = "toggle comment" })
+vim.api.nvim_set_keymap(
+	"v",
+	"<C-c>",
+	":'<,'>Commentary<cr>gv",
+	{ noremap = true, silent = true, desc = "toggle comment" }
+)
+
 -- vim: ts=4
