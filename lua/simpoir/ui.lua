@@ -35,6 +35,7 @@ function M.setup(opts)
 	opt.guifont = opts.font
 
 	local alpha_theme = require("alpha.themes.startify").config
+	require("alpha.themes.startify").nvim_web_devicons.enabled = false
 	require("alpha").setup(alpha_theme)
 	g.eighties_bufname_additional_patterns = { "__Tagbar__" }
 
