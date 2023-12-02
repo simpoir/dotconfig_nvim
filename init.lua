@@ -39,7 +39,6 @@ local packs = {
 	"flazz/vim-colorschemes",
 	"vim-airline/vim-airline",
 	"vim-airline/vim-airline-themes",
-	"kyazdani42/nvim-web-devicons",
 	"mhinz/vim-signify", -- like gitgutter for all
 	"liuchengxu/vim-which-key", -- the backslash menu
 	"justincampbell/vim-eighties", -- auto 80col resizer
@@ -62,8 +61,7 @@ local packs = {
 	"goolord/alpha-nvim",
 	"embear/vim-localvimrc", -- .lvimrc support
 	"janko-m/vim-test", -- generic test runner
-	"ms-jpq/coq_nvim", -- modern completion and snippets
-	"ms-jpq/coq.artifacts",
+	"ray-x/lsp_signature.nvim", -- live signature popup
 
 	-- Syntax
 	----------------------------------------
@@ -73,7 +71,6 @@ local packs = {
 	"nvim-treesitter/nvim-treesitter",
 	"nvim-treesitter/nvim-treesitter-textobjects",
 	"windwp/nvim-ts-autotag", -- auto close tags using ts
-	"andymass/vim-matchup",
 
 	-- Edition
 	----------------------------------------
@@ -95,7 +92,6 @@ local packs = {
 	"mbbill/undotree", -- visual undo tree
 	"kopischke/vim-fetch", -- file:line remapper
 	"kyazdani42/nvim-tree.lua", -- file tree
-	"kyazdani42/nvim-web-devicons", -- file tree
 	"majutsushi/tagbar", -- taglist panel
 	"romainl/vim-cool", -- auto-toggle hls
 	{
@@ -106,9 +102,6 @@ local packs = {
 	}, -- embed into browser
 }
 require("simpoir.packman").setup(packs)
-
--- presentation mode
-require("simpoir.slide").setup()
 
 -- compat
 opt.shell = "/bin/bash"
@@ -234,7 +227,8 @@ require("mason").setup()
 local lspconfig = require("lspconfig")
 -- auto set caps through setup hook
 lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(config)
-	config.capabilities = require("coq").lsp_ensure_capabilities(config).capabilities
+	-- not quite feature complete yet.
+	-- config.capabilities.textDocument.completion.completionItem.snippetSupport = true
 end)
 lspconfig.yamlls.setup({
 	settings = {
@@ -307,12 +301,10 @@ end
 lspconfig.ltex.setup({
 	filetypes = { "bib", "gitcommit", "markdown", "org", "text", "plaintex", "rst", "rnoweb", "tex", "pandoc", "mail" },
 })
--- lspconfig.vimls.setup({})
--- lspconfig.gopls.setup({})
 
--- require("lsp_signature").setup({
--- 	zindex = 1,
--- })
+require("lsp_signature").setup({
+	zindex = 1,
+})
 
 -- non-lsp lang bits
 opt.tabstop = 2
@@ -337,20 +329,6 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagn
 	underline = true,
 	signs = true,
 })
-vim.api.nvim_create_autocmd("CursorHold", {
-	callback = function()
-		for _, win in ipairs(vim.api.nvim_list_wins()) do
-			-- skip overriding existing floats
-			if vim.api.nvim_win_get_config(win).relative ~= "" then
-				return
-			end
-		end
-		vim.diagnostic.open_float({ relative = "editor", anchor = "SW", focusable = false })
-	end,
-})
--- I'm unsure about this one. It seems convenient but the errors I get from some lsp (e.g. ltex + markdown)
--- makes me want to keep it off rather than whitelist the world.
--- vim.api.nvim_create_autocmd("CursorHoldI", { callback = vim.lsp.buf.signature_help })
 
 ----------------------------------------
 -- Pretty Mappings
@@ -439,8 +417,13 @@ au!
 au BufRead *.eml set fo+=anw tw=76
 au FileType python setlocal omnifunc=v:lua.vim.lsp.omnifunc
 augroup END
-command WriteAsRoot %!SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %
+command! WriteAsRoot %!SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %
 ]])
+vim.api.nvim_create_user_command(
+	"WriteAsRoot",
+	"<cmd>%SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %<cr>",
+	{ bang = true }
+)
 
 function Alternate()
 	local filetype = vim.api.nvim_buf_get_option(0, "filetype")
@@ -542,6 +525,8 @@ require("nvim-dap-virtual-text").setup()
 
 require("nvim-treesitter.configs").setup({
 	ensure_installed = { "c", "lua", "python", "rust" },
+	-- take precedence over builtins
+	parser_install_dir = fn.stdpath("data") .. "/site",
 	sync_install = false,
 	auto_install = true,
 	autopairs = {
@@ -557,12 +542,8 @@ require("nvim-treesitter.configs").setup({
 	indent = {
 		enable = true,
 		-- syntax-based indent wasn't an option with indent-scoped formats
-		-- It's getting better.
+		-- It's getting better. If it breaks again, disable the filetypes
 		-- disable = { "yaml", "python" },
-	},
-	matchup = {
-		enable = true,
-		disable = {},
 	},
 	textobjects = {
 		select = {
