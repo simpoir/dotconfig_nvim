@@ -621,5 +621,7 @@ vim.api.nvim_set_keymap(
 	":'<,'>Commentary<cr>gv",
 	{ noremap = true, silent = true, desc = "toggle comment" }
 )
+-- jump between start and end of visual selection. Also mimics helix.
+vim.api.nvim_set_keymap("v", "<A-;>", "o", {})
 
 -- vim: ts=4
