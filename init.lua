@@ -209,20 +209,6 @@ function FilteredFormat()
 	end
 end
 
-g.coq_settings = {
-	auto_start = true,
-	keymap = { jump_to_mark = "<c-j>" },
-	clients = {
-		buffers = {
-			-- disabled in favor of manual trigger through c-n
-			enabled = false,
-		},
-	},
-	-- disable until I find what makes it double complete.
-	-- e.g. String::f| -> TAB -> String::ffrom
-	completion = { always = false },
-}
-
 require("mason").setup()
 local lspconfig = require("lspconfig")
 -- auto set caps through setup hook
