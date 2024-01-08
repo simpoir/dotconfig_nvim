@@ -58,6 +58,7 @@ function M.setup(packs)
 			vim.cmd("redrawstatus")
 		end
 		print("loading pack", p)
+		vim.cmd("redraw")
 		if eager then
 			table.insert(vim.opt.runtimepath, 0, abs_pack_dir)
 		end
@@ -78,11 +79,8 @@ function M.setup(packs)
 		for _, v in pairs(breadcrumbs) do
 			msg = msg .. v .. " "
 		end
+		vim.cmd("redraw")
 		print(msg)
-	else
-		if not has_errors then
-			vim.cmd("redraw")
-		end
 	end
 end
 

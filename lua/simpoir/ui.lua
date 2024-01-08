@@ -34,9 +34,15 @@ function M.setup(opts)
 	vim.cmd("colorscheme " .. opts.theme)
 	opt.guifont = opts.font
 
-	local alpha_theme = require("alpha.themes.startify").config
-	require("alpha.themes.startify").nvim_web_devicons.enabled = false
-	require("alpha").setup(alpha_theme)
+	local alpha_theme = require("alpha.themes.startify")
+	alpha_theme.nvim_web_devicons.enabled = false
+	if vim.fn.filereadable("Session.vim") == 1 then
+		table.insert(
+			alpha_theme.section.top_buttons.val,
+			alpha_theme.button("s", "Restore Session.vim", "<cmd>source Session.vim<cr>")
+		)
+	end
+	require("alpha").setup(alpha_theme.config)
 	g.eighties_bufname_additional_patterns = { "__Tagbar__" }
 
 	vim.api.nvim_create_autocmd("BufNew", {

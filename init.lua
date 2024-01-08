@@ -3,7 +3,7 @@
 --
 -- For Neovim 0.8.0+
 --
--- Copyright (c) 2019-2022 Simon Poirier
+-- Copyright (c) 2019-2024 Simon Poirier
 --
 -- Permission is hereby granted, free of charge, to any person obtaining a copy
 -- of this software and associated documentation files (the "Software"), to
@@ -36,7 +36,7 @@ local opt = vim.opt
 local packs = {
 	-- Appearance
 	----------------------------------------
-	"flazz/vim-colorschemes",
+	"flazz/vim-colorschemes", -- one of the largest/oldest theme collection
 	"vim-airline/vim-airline",
 	"vim-airline/vim-airline-themes",
 	"mhinz/vim-signify", -- like gitgutter for all
@@ -44,6 +44,7 @@ local packs = {
 	"justincampbell/vim-eighties", -- auto 80col resizer
 	"yggdroot/indentLine", -- show line indentation
 	"exvim/ex-showmarks", -- show (book)marks in gutter
+	"nvim-web-devicons", -- icons mapping, required by tree and compl
 
 	-- LSP and IDE lang stack
 	----------------------------------------
@@ -61,7 +62,16 @@ local packs = {
 	"goolord/alpha-nvim",
 	"embear/vim-localvimrc", -- .lvimrc support
 	"janko-m/vim-test", -- generic test runner
-	"ray-x/lsp_signature.nvim", -- live signature popup
+	{ -- nightly minimal completion engine
+		"echasnovski/mini.nvim",
+		config = function()
+			require("mini.comment").setup({
+				-- map commenting to ctrl-c, helix-style
+				mappings = { comment = "<C-c>", comment_line = "<C-c>", comment_visual = "<C-c>" },
+			})
+			require("mini.completion").setup()
+		end,
+	},
 
 	-- Syntax
 	----------------------------------------
@@ -78,7 +88,6 @@ local packs = {
 	"matze/vim-move", -- alt-arrow line moving
 	"jqno/jqno-extractvariable.vim",
 	"tpope/vim-surround",
-	"tpope/vim-commentary",
 	"windwp/nvim-autopairs", -- autoclose pairs
 
 	-- Tooling
@@ -86,7 +95,6 @@ local packs = {
 	"nvim-telescope/telescope.nvim", -- like fzf, but lua
 	"tpope/vim-obsession", -- auto session management
 	"tpope/vim-fugitive", -- git commands
-	"mhinz/vim-grepper", -- ag/rg/grep generic grepper
 	"airblade/vim-rooter", -- autochdir to repo
 	"junkblocker/patchreview-vim", -- side-by-side diff viewer
 	"mbbill/undotree", -- visual undo tree
@@ -94,12 +102,6 @@ local packs = {
 	"kyazdani42/nvim-tree.lua", -- file tree
 	"majutsushi/tagbar", -- taglist panel
 	"romainl/vim-cool", -- auto-toggle hls
-	{
-		"glacambre/firenvim",
-		post_inst = function()
-			vim.fn["firenvim#install"](0)
-		end,
-	}, -- embed into browser
 }
 require("simpoir.packman").setup(packs)
 
@@ -117,11 +119,11 @@ g.Todo_fold_char = ""
 -- avoid switching to subdirs when opening project files.
 -- Rooter will switch to the project root.
 opt.autochdir = false
-g.startify_change_to_dir = false
 
 opt.scrolloff = 5 -- scroll margin
 require("simpoir.ui").setup({
-	theme = "monokai-phoenix",
+	-- theme = "paramount",
+	theme = "Spink",
 })
 -- Override all themes to make cursor visible (blink) in paren matching
 vim.api.nvim_set_hl(0, "MatchParen", { bg = "red", fg = "cyan" })
@@ -215,6 +217,9 @@ local lspconfig = require("lspconfig")
 lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(config)
 	-- not quite feature complete yet.
 	-- config.capabilities.textDocument.completion.completionItem.snippetSupport = true
+	config.capabilities.textDocument.completion.completionItem.resolveSupport = {
+		properties = { "documentation", "detail", "additionalTextEdits" },
+	}
 end)
 lspconfig.yamlls.setup({
 	settings = {
@@ -237,8 +242,13 @@ lspconfig.yamlls.setup({
 })
 
 lspconfig.rust_analyzer.setup({
-	settings = { ["rust-analyzer"] = { checkOnSave = { command = "clippy" } } },
+	settings = { ["rust-analyzer"] = {
+		checkOnSave = { command = "clippy" },
+		autoimport = { enable = true },
+	} },
 })
+local lua_libs = vim.api.nvim_get_runtime_file("", true)
+table.insert(lua_libs, "/usr/share/awesome/lib")
 lspconfig.lua_ls.setup({
 	settings = {
 		Lua = {
@@ -249,11 +259,7 @@ lspconfig.lua_ls.setup({
 				globals = { "vim" },
 			},
 			workspace = {
-				library = {
-					[vim.fn.expand("$VIMRUNTIME/lua")] = true,
-					[vim.fn.expand("$VIMRUNTIME/lua/vim/lsp")] = true,
-					["/usr/share/awesome/lib"] = true,
-				},
+				library = lua_libs,
 				maxPreload = 10000,
 				preloadFileSize = 10000,
 				checkThirdParty = false,
@@ -286,10 +292,6 @@ for _, srv in ipairs(require("mason-lspconfig").get_installed_servers()) do
 end
 lspconfig.ltex.setup({
 	filetypes = { "bib", "gitcommit", "markdown", "org", "text", "plaintex", "rst", "rnoweb", "tex", "pandoc", "mail" },
-})
-
-require("lsp_signature").setup({
-	zindex = 1,
 })
 
 -- non-lsp lang bits
@@ -345,6 +347,8 @@ g.lmap = {
 		c = { "v:lua.BufGone()", "Close buffer and switch to next" },
 		d = { ":e $MYVIMRC", "Open dotfile" },
 		f = { ":Telescope find_files", "Find file" },
+		F = { ":Telescope git_files", "Repository find" },
+		j = { ":Telescope jumplist", "Jump list" },
 		G = { ":lua require'telescope.builtin'.live_grep{default_text=vim.fn.expand('<cword>')}", "Grep cursor" },
 		g = { ":Telescope live_grep", "Live Grep" },
 		t = { "NvimTreeToggle", "file Tree toggle" },
@@ -360,6 +364,7 @@ g.lmap = {
 		name = "Language",
 		a = { "luaeval('vim.lsp.buf.code_action()')", "Actions" },
 		d = { "luaeval('vim.lsp.buf.definition()')", "Definition" },
+		D = { "luaeval('vim.lsp.buf.type_definition()')", "Type definition" },
 		f = { "v:lua.FilteredFormat()", "Format file" },
 		e = { "Trouble", "Diagnostics" },
 		h = { "luaeval('vim.lsp.buf.hover()')", "hover" },
@@ -402,7 +407,6 @@ augroup autoformat
 au!
 " autoformat emails
 au BufRead *.eml set fo+=anw tw=76
-au FileType python setlocal omnifunc=v:lua.vim.lsp.omnifunc
 augroup END
 command! WriteAsRoot %!SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %
 ]])
@@ -483,7 +487,7 @@ dap.configurations.c = {
 		request = "launch",
 		MIMode = "gdb",
 		program = function()
-			g.program = vim.fn.input("Path to executable: ", g.program or "", "file")
+			g.program = vim.fn.input({ prompt = "Path to executable: ", text = g.program or "", completion = "file" })
 			return g.program
 		end,
 		cwd = "${workspaceFolder}",
@@ -497,7 +501,7 @@ dap.configurations.rust = {
 		MIMode = "gdb",
 		miDebuggerPath = fn.environ().HOME .. "/.cargo/bin/rust-gdb",
 		program = function()
-			return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+			return vim.fn.input({ prompt = "Path to executable: ", text = vim.fn.getcwd() .. "/", completion = "file" })
 		end,
 		cwd = "${workspaceFolder}",
 		args = {},
@@ -508,9 +512,11 @@ vim.api.nvim_set_keymap("", "<F6>", "<cmd>lua require 'dap'.step_over()<CR>", { 
 vim.api.nvim_set_keymap("i", "<F6>", "<cmd>lua require 'dap'.step_over()<CR>", { noremap = true })
 vim.api.nvim_set_keymap("", "<F7>", "<cmd>lua require 'dap'.continue()<CR>", { noremap = true })
 vim.api.nvim_set_keymap("", "<F8>", "<cmd>lua require 'dap'.toggle_breakpoint()<CR>", { noremap = true })
-require("nvim-dap-virtual-text").setup()
+require("nvim-dap-virtual-text").setup({})
 
 require("nvim-treesitter.configs").setup({
+	modules = {},
+	ignore_install = {},
 	ensure_installed = { "c", "lua", "python", "rust" },
 	-- take precedence over builtins
 	parser_install_dir = fn.stdpath("data") .. "/site",
@@ -530,7 +536,7 @@ require("nvim-treesitter.configs").setup({
 		enable = true,
 		-- syntax-based indent wasn't an option with indent-scoped formats
 		-- It's getting better. If it breaks again, disable the filetypes
-		-- disable = { "yaml", "python" },
+		disable = { "rust" }, -- https://github.com/nvim-treesitter/nvim-treesitter/issues/5615
 	},
 	textobjects = {
 		select = {
@@ -610,17 +616,11 @@ end
 vim.api.nvim_set_keymap("v", "<A-o>", "<cmd>lua VisualBlockNode()<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<A-o>", "<cmd>lua VisualBlockNode()<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("v", "<A-i>", "<cmd>lua VisualBlockNode(true)<cr>", { noremap = true, silent = true })
+function VisualBlockSiblingNode() end
+vim.api.nvim_set_keymap("v", "<A-n>", "<cmd>lua VisualBlockSiblingNode()<cr>", { noremap = true, silent = true })
 
 -- shift-k already was used for showing manpages. Hijack to show any LSP documentation.
 vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<cr>", { noremap = true, silent = true })
--- map commenting to ctrl-c, helix-style
-vim.api.nvim_set_keymap("n", "<C-c>", "<cmd>Commentary<cr>", { noremap = true, silent = true, desc = "toggle comment" })
-vim.api.nvim_set_keymap(
-	"v",
-	"<C-c>",
-	":'<,'>Commentary<cr>gv",
-	{ noremap = true, silent = true, desc = "toggle comment" }
-)
 -- jump between start and end of visual selection. Also mimics helix.
 vim.api.nvim_set_keymap("v", "<A-;>", "o", {})
 

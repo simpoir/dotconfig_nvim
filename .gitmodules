@@ -130,3 +130,18 @@
 [submodule "site/pack/simpoir/opt/firenvim"]
 	path = site/pack/simpoir/opt/firenvim
 	url = https://github.com/glacambre/firenvim
+[submodule "site/pack/simpoir/opt/epo.nvim"]
+	path = site/pack/simpoir/opt/epo.nvim
+	url = https://github.com/nvimdev/epo.nvim
+[submodule "site/pack/simpoir/opt/mini.nvim"]
+	path = site/pack/simpoir/opt/mini.nvim
+	url = https://github.com/echasnovski/mini.nvim
+[submodule "site/pack/simpoir/opt/nvim-web-devicons"]
+	path = site/pack/simpoir/opt/nvim-web-devicons
+	url = https://github.com/nvim-web-devicons
+[submodule "site/pack/simpoir/opt/vim-no-color-collections"]
+	path = site/pack/simpoir/opt/vim-no-color-collections
+	url = https://github.com/mcchrish/vim-no-color-collections
+[submodule "site/pack/simpoir/opt/rasmus.nvim"]
+	path = site/pack/simpoir/opt/rasmus.nvim
+	url = https://github.com/kvrohit/rasmus.nvim
