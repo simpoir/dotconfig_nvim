@@ -33,15 +33,13 @@ local opt = vim.opt
 ----------------------------------------
 -- Packages
 ----------------------------------------
-local packs = {
+require("simpoir.packman").setup({
 	-- Appearance
 	----------------------------------------
 	"flazz/vim-colorschemes", -- one of the largest/oldest theme collection
-	"vim-airline/vim-airline",
-	"vim-airline/vim-airline-themes",
+	"tanvirtin/monokai.nvim",
 	"mhinz/vim-signify", -- like gitgutter for all
 	"liuchengxu/vim-which-key", -- the backslash menu
-	"justincampbell/vim-eighties", -- auto 80col resizer
 	"yggdroot/indentLine", -- show line indentation
 	"exvim/ex-showmarks", -- show (book)marks in gutter
 	"nvim-web-devicons", -- icons mapping, required by tree and compl
@@ -52,14 +50,19 @@ local packs = {
 	"williamboman/mason-lspconfig.nvim",
 	"neovim/nvim-lspconfig", -- common configs for LSP
 	"mfussenegger/nvim-dap", -- debug adapter protocol
+	{ -- hovering lsp diagnostics
+		"dgagn/diagflow.nvim",
+		config = function()
+			require("diagflow").setup({})
+		end,
+	},
 	"theHamsta/nvim-dap-virtual-text", -- show variables inline in debug
 	"nvim-lua/plenary.nvim", -- lua boilerplate, for null-ls
 	"jose-elias-alvarez/null-ls.nvim", -- extra linting/formatting
-	"HiPhish/jinja.vim", -- non-TS jinja syntax
 
 	-- Coding
 	----------------------------------------
-	"goolord/alpha-nvim",
+	"goolord/alpha-nvim", -- startup menu
 	"embear/vim-localvimrc", -- .lvimrc support
 	"janko-m/vim-test", -- generic test runner
 	{ -- nightly minimal completion engine
@@ -69,7 +72,31 @@ local packs = {
 				-- map commenting to ctrl-c, helix-style
 				mappings = { comment = "<C-c>", comment_line = "<C-c>", comment_visual = "<C-c>" },
 			})
-			require("mini.completion").setup()
+			require("mini.completion").setup({
+				window = {
+					info = { height = 25, width = 80, border = "rounded" },
+					signature = { height = 25, width = 80, border = "rounded" },
+				},
+			})
+			require("mini.statusline").setup({})
+			require("mini.tabline").setup({})
+
+			-- enable autoimport
+			local lspconfig = require("lspconfig")
+			lspconfig.util.on_setup = function(config)
+				config.capabilities.textDocument.completion.completionItem.snippetSupport = true
+				config.capabilities.textDocument.completion.completionItem.resolveSupport =
+					{ properties = {
+						"documentation",
+						"detail",
+						"additionalTextEdits",
+					} }
+			end
+			-- snip nav alternative
+			cmd([[:nnoremap <A-j> /$\(\d\\|[^}]*\}\)<CR>gnc]])
+			cmd([[:nnoremap <A-k> ?$\(\d\\|[^}]*\}\)<CR>gNc]])
+			cmd([[:inoremap <A-j> <esc>/$\(\d\\|[^}]*\}\)<CR>gnc]])
+			cmd([[:inoremap <A-k> <esc>?$\(\d\\|[^}]*\}\)<CR>gNc]])
 		end,
 	},
 
@@ -85,25 +112,39 @@ local packs = {
 	-- Edition
 	----------------------------------------
 	"tpope/vim-sleuth", -- auto shiftwidth
-	"matze/vim-move", -- alt-arrow line moving
+	{
+		"matze/vim-move", -- alt-arrow line moving
+		config = function()
+			-- Default binds are prone to accidental moves.
+			g.move_map_keys = 0
+			cmd("vmap <A-j> <Plug>MoveBlockDown")
+			cmd("vmap <A-k> <Plug>MoveBlockUp")
+		end,
+	},
 	"jqno/jqno-extractvariable.vim",
 	"tpope/vim-surround",
-	"windwp/nvim-autopairs", -- autoclose pairs
+	{
+		"windwp/nvim-autopairs", -- autoclose pairs
+		config = function()
+			require("nvim-autopairs").setup({
+				check_ts = true,
+			})
+		end,
+	},
 
 	-- Tooling
 	----------------------------------------
 	"nvim-telescope/telescope.nvim", -- like fzf, but lua
 	"tpope/vim-obsession", -- auto session management
 	"tpope/vim-fugitive", -- git commands
-	"airblade/vim-rooter", -- autochdir to repo
+	-- "airblade/vim-rooter", -- autochdir to repo
 	"junkblocker/patchreview-vim", -- side-by-side diff viewer
 	"mbbill/undotree", -- visual undo tree
 	"kopischke/vim-fetch", -- file:line remapper
 	"kyazdani42/nvim-tree.lua", -- file tree
-	"majutsushi/tagbar", -- taglist panel
+	"liuchengxu/vista.vim", -- taglist panel, with lsp support
 	"romainl/vim-cool", -- auto-toggle hls
-}
-require("simpoir.packman").setup(packs)
+})
 
 -- compat
 opt.shell = "/bin/bash"
@@ -123,11 +164,16 @@ opt.autochdir = false
 opt.scrolloff = 5 -- scroll margin
 require("simpoir.ui").setup({
 	-- theme = "paramount",
-	theme = "Spink",
+	-- theme = "Tomorrow-Night",
+	-- theme = "randomhue",
+	-- theme = "monokai-phoenix",
+	-- theme = "minimalist",
+	theme = "monokai",
 })
+
 -- Override all themes to make cursor visible (blink) in paren matching
 vim.api.nvim_set_hl(0, "MatchParen", { bg = "red", fg = "cyan" })
-g.eighties_bufname_additional_patterns = { "fugitiveblame", "NvimTree" }
+g.eighties_bufname_additional_patterns = { "fugitiveblame", "NvimTree", "__vista__" }
 
 vim.api.nvim_create_autocmd("BufReadPost", {
 	callback = function()
@@ -152,24 +198,13 @@ g.indentLine_concealcursor = "c"
 ----------------------------------------
 g.localvimrc_persistent = 1
 g.localvimrc_name = { ".lvimrc", ".lvimrc.lua", "_vimrc_local.vim" }
-g.rooter_change_directory_for_non_project_files = "current" -- soothes LSP in home dir
-g.rooter_patterns = { ".git", ".bzr", "Makefile", "Cargo.toml", "debian" }
+-- g.rooter_change_directory_for_non_project_files = "current" -- soothes LSP in home dir
+-- g.rooter_patterns = { ".git", ".bzr", "Makefile", "Cargo.toml", "debian" }
 g.signify_vcs_cmds = { bzr = "bzr diff --diff-options=-U0 -- %f" }
 
 require("nvim-tree").setup({
 	view = {
 		width = 30,
-		--[[
-		float =
-			enable = true,
-			quit_on_focus_loss = true,
-			open_win_config = {
-				anchor = "NW",
-				border = "solid",
-				height = 999,
-			},
-		},
-		--]]
 	},
 	filters = {
 		dotfiles = true,
@@ -213,14 +248,6 @@ end
 
 require("mason").setup()
 local lspconfig = require("lspconfig")
--- auto set caps through setup hook
-lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(config)
-	-- not quite feature complete yet.
-	-- config.capabilities.textDocument.completion.completionItem.snippetSupport = true
-	config.capabilities.textDocument.completion.completionItem.resolveSupport = {
-		properties = { "documentation", "detail", "additionalTextEdits" },
-	}
-end)
 lspconfig.yamlls.setup({
 	settings = {
 		redhat = { telemetry = { enabled = false } },
@@ -232,13 +259,28 @@ lspconfig.yamlls.setup({
 				["https://raw.githubusercontent.com/canonical/cloud-init/main/cloudinit/config/schemas/schema-cloud-config-v1.json"] = "*.cloud",
 			},
 			customTags = {
+				"!j2:",
 				"!include:",
 				"!include-jinja2:",
 				"!include-raw-escape:",
-				"!include-jinja2",
+				"!include-jinja2:",
+				"!include-jinja2: sequence",
 			},
 		},
 	},
+})
+lspconfig.bashls.setup({
+	filetypes = { "sh", "bash", "shjinja" },
+})
+lspconfig.jinja_lsp.setup({
+	filetyles = { "htmldjango" },
+})
+vim.api.nvim_create_autocmd("BufRead", {
+	pattern = { "templates/**/*.html" },
+	callback = function()
+		opt.syntax = "htmldjango"
+		opt.filetyle = "htmldjango"
+	end,
 })
 
 lspconfig.rust_analyzer.setup({
@@ -270,6 +312,20 @@ lspconfig.lua_ls.setup({
 		},
 	},
 })
+lspconfig.pylsp.setup({
+	settings = {
+		pylsp = {
+			plugins = {
+				pycodestyle = {
+					-- ignore = { "W391" },
+					maxLineLength = 120,
+				},
+			},
+		},
+	},
+})
+
+-- It seems to randomly corrupt it's buffer and see phantom issues on format.
 -- lspconfig.pyright.setup({
 -- 	settings = {
 -- 		python = {
@@ -301,7 +357,7 @@ nuls.setup({
 	autostart = true,
 	sources = {
 		nuls.builtins.formatting.stylua,
-		nuls.builtins.formatting.black,
+		nuls.builtins.formatting.black.with({ extra_args = { "-l", "120" } }),
 		nuls.builtins.formatting.isort,
 		-- method = nuls.builtins.formatting.yapf,
 		nuls.builtins.diagnostics.fish,
@@ -313,7 +369,7 @@ nuls.setup({
 })
 
 vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
-	virtual_text = true,
+	virtual_text = false, -- provided by diagflow
 	underline = true,
 	signs = true,
 })
@@ -351,7 +407,7 @@ g.lmap = {
 		j = { ":Telescope jumplist", "Jump list" },
 		G = { ":lua require'telescope.builtin'.live_grep{default_text=vim.fn.expand('<cword>')}", "Grep cursor" },
 		g = { ":Telescope live_grep", "Live Grep" },
-		t = { "NvimTreeToggle", "file Tree toggle" },
+		t = { "NvimTreeFindFile", "file Tree toggle" },
 	},
 	g = {
 		name = "Git",
@@ -388,8 +444,8 @@ vim.api.nvim_set_keymap(
 	"<cmd>cal setline(line('.'), getline(line('.')).'import pudb.remote; pudb.remote.set_trace(term_size=('.&columns.', '.(&lines-1).'))')<CR>",
 	{ noremap = true }
 )
-vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", { noremap = true })
-vim.api.nvim_set_keymap("i", "{<cr>", "{<cr>}<esc>O", { noremap = true })
+vim.api.nvim_set_keymap("i", "pudb", "import pudb; pudb.set_trace()", { noremap = true, desc = "quick pdb" })
+vim.api.nvim_set_keymap("i", "{<cr>", "{<cr>}<esc>O", { noremap = true, desc = "Auto-curly" })
 
 -- format on save for a select few types
 vim.api.nvim_create_autocmd("BufWritePre", {
@@ -407,14 +463,9 @@ augroup autoformat
 au!
 " autoformat emails
 au BufRead *.eml set fo+=anw tw=76
+command! WriteAsRoot %!env SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %
 augroup END
-command! WriteAsRoot %!SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %
 ]])
-vim.api.nvim_create_user_command(
-	"WriteAsRoot",
-	"<cmd>%SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %<cr>",
-	{ bang = true }
-)
 
 function Alternate()
 	local filetype = vim.api.nvim_buf_get_option(0, "filetype")
@@ -577,14 +628,29 @@ require("nvim-treesitter.configs").setup({
 })
 -- fixes autoclose tags with django.
 vim.treesitter.language.register("htmldjango", "html")
-require("nvim-autopairs").setup({
-	check_ts = true,
+
+-- hack in bash+django
+vim.api.nvim_create_autocmd("BufReadPost", {
+	pattern = { "*.j2" },
+	callback = function(ev)
+		vim.treesitter.language.register("htmldjango", "shjinja")
+		vim.treesitter.query.set(
+			"htmldjango",
+			"injections",
+			'((content) @injection.content (#set! injection.language "bash") (#set! injection.combined))'
+		)
+		cmd("set filetype=shjinja")
+	end,
 })
 
 ----------------------------------------
 -- Helix zone.
 -- Here are bits which I liked trying out Helix.
 ----------------------------------------
+
+vim.api.nvim_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<cr>", {})
+vim.api.nvim_set_keymap("n", "gD", "<cmd>lua vim.lsp.buf.type_definition()<cr>", {})
+vim.api.nvim_set_keymap("n", "ge", "<cmd>Telescope diagnostics<cr>", {})
 
 -- Helix-style syntactic incremental selection. Alt-i Alt-o
 VisualNode = {}
@@ -607,6 +673,9 @@ function VisualBlockNode(pop)
 		return
 	end
 	local node = VisualNode[#VisualNode]
+	if node == nil then
+		return
+	end
 	local start_l, start_c = node:start()
 	local end_l, end_c = node:end_()
 	vim.fn.cursor(start_l + 1, start_c + 1)
@@ -616,12 +685,49 @@ end
 vim.api.nvim_set_keymap("v", "<A-o>", "<cmd>lua VisualBlockNode()<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<A-o>", "<cmd>lua VisualBlockNode()<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("v", "<A-i>", "<cmd>lua VisualBlockNode(true)<cr>", { noremap = true, silent = true })
-function VisualBlockSiblingNode() end
+function VisualBlockSiblingNode(prev)
+	if vim.fn.mode() ~= "v" or #VisualNode == 0 then
+		VisualNode = { vim.treesitter.get_node() }
+	else
+		vim.cmd("normal! v")
+	end
+	local node
+	if prev then
+		node = VisualNode[#VisualNode]:prev_sibling()
+	else
+		node = VisualNode[#VisualNode]:next_sibling()
+	end
+
+	if node == nil then
+		return
+	end
+
+	VisualNode = { node }
+	local start_l, start_c = node:start()
+	local end_l, end_c = node:end_()
+	vim.fn.cursor(start_l + 1, start_c + 1)
+	vim.cmd("normal! v")
+	vim.fn.cursor(end_l + 1, end_c)
+end
 vim.api.nvim_set_keymap("v", "<A-n>", "<cmd>lua VisualBlockSiblingNode()<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<A-n>", "<cmd>lua VisualBlockSiblingNode()<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("v", "<A-p>", "<cmd>lua VisualBlockSiblingNode(true)<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<A-p>", "<cmd>lua VisualBlockSiblingNode(true)<cr>", { noremap = true, silent = true })
 
 -- shift-k already was used for showing manpages. Hijack to show any LSP documentation.
 vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<cr>", { noremap = true, silent = true })
 -- jump between start and end of visual selection. Also mimics helix.
 vim.api.nvim_set_keymap("v", "<A-;>", "o", {})
 
+-- Auto unload buffers to external files.
+function CleanBufs()
+	local here = vim.fn.getcwd()
+	for _, b in ipairs(vim.api.nvim_list_bufs()) do
+		local name = vim.api.nvim_buf_get_name(b)
+		if name:sub(1, 1) == "/" and name:sub(1, here:len()) ~= here then
+			vim.api.nvim_buf_delete(b, {})
+		end
+	end
+end
+cmd([[command CleanBufs lua CleanBufs()]])
 -- vim: ts=4

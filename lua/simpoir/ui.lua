@@ -4,7 +4,7 @@ local M = {}
 
 local DEFAULTS = {
 	theme = "koehler",
-	font = "FuraCode Nerd Font:h9",
+	font = "FiraMono Nerd Font:h9",
 	mouse = true,
 }
 
@@ -55,7 +55,6 @@ function M.setup(opts)
 	g.neovide_transparency = 0.95
 	g.neovide_refresh_rate = 20
 	g.airline_powerline_fonts = 1
-	g["airline#extensions#tabline#enabled"] = 1
 
 	opt.colorcolumn = "80"
 	opt.list = true

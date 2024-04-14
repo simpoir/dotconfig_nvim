@@ -12,6 +12,52 @@ vim.opt.packpath:append(install_path)
 local packs_dir = "pack/simpoir/opt/"
 local breadcrumbs = vim.fn.readdir(install_path .. packs_dir)
 
+local function add_mod(pack, opts)
+	local has_errors
+	local p = string.gsub(pack, "^[^/]+/", "")
+	local pack_dir = packs_dir .. p
+	local abs_pack_dir = install_path .. pack_dir
+	if #(vim.fn.glob(abs_pack_dir)) == 0 then
+		print(vim.fn.system({
+			"git",
+			"-C",
+			vim.fn.stdpath("config"),
+			"submodule",
+			"add",
+			"--force",
+			"https://github.com/" .. pack,
+			"site/" .. pack_dir,
+		}))
+	end
+	if #(vim.fn.readdir(abs_pack_dir)) == 0 then
+		print("--> Pulling submodule pack for", p)
+		vim.fn.system({
+			"git",
+			"-C",
+			vim.fn.stdpath("config"),
+			"submodule",
+			"update",
+			"--init",
+			"site/pack/simpoir/opt/" .. p,
+		})
+	end
+	if not has_errors then
+		vim.cmd("redrawstatus")
+	end
+	print("loading pack", p)
+	vim.cmd("redraw")
+	if opts.eager then
+		table.insert(vim.opt.runtimepath, 0, abs_pack_dir)
+	end
+	if not pcall(function()
+		return vim.cmd("packadd! " .. p)
+	end) then -- lazy pack load, so config globals are initialized
+		print("Issue loading pack", p)
+		has_errors = true
+	end
+	return has_errors
+end
+
 ----------------------------------------
 -- Bootstrap Site Packs
 ----------------------------------------
@@ -22,56 +68,25 @@ function M.setup(packs)
 		local config = function() end
 		if type(pack) == "table" then
 			local pack_opt = pack
-			pack = pack[1]
 			eager = pack_opt["eager"]
 			config = pack_opt["config"] or config
+		else
+			pack = { pack }
 		end
-		local p = string.gsub(pack, "^[^/]+/", "")
-		local pack_dir = packs_dir .. p
-		local abs_pack_dir = install_path .. pack_dir
-		if #(vim.fn.glob(abs_pack_dir)) == 0 then
-			print("[", i, "/", #packs, "] Adding submodule pack for", p)
-			print(vim.fn.system({
-				"git",
-				"-C",
-				vim.fn.stdpath("config"),
-				"submodule",
-				"add",
-				"--force",
-				"https://github.com/" .. pack,
-				"site/" .. pack_dir,
-			}))
-		end
-		if #(vim.fn.readdir(abs_pack_dir)) == 0 then
-			print("[", i, "/", #packs, "] Pulling submodule pack for", p)
-			vim.fn.system({
-				"git",
-				"-C",
-				vim.fn.stdpath("config"),
-				"submodule",
-				"update",
-				"--init",
-				"site/pack/simpoir/opt/" .. p,
-			})
-		end
-		if not has_errors then
-			vim.cmd("redrawstatus")
-		end
-		print("loading pack", p)
-		vim.cmd("redraw")
-		if eager then
-			table.insert(vim.opt.runtimepath, 0, abs_pack_dir)
-		end
-		if not pcall(vim.cmd, "packadd! " .. p) then -- lazy pack load, so config globals are initialized
-			print("Issue loading pack", p)
-			has_errors = true
-		end
-		config()
-		for k, v in pairs(breadcrumbs) do
-			if v == p then
-				table.remove(breadcrumbs, k)
+		-- can have multiple submods
+		for _, subpack in ipairs(pack) do
+			print("[", i, "/", #packs, "] Adding submodule pack for", subpack)
+			has_errors = add_mod(subpack, { eager = eager }) or has_errors
+
+			-- flag as used
+			local subpack_name = subpack:gsub("^[^/]+/", "")
+			for k, v in pairs(breadcrumbs) do
+				if v == subpack_name then
+					table.remove(breadcrumbs, k)
+				end
 			end
 		end
+		config()
 	end
 	vim.cmd("helptags ALL")
 	if #breadcrumbs > 0 then
