@@ -115,3 +115,9 @@
 [submodule "site/pack/simpoir/opt/monokai.nvim"]
 	path = site/pack/simpoir/opt/monokai.nvim
 	url = https://github.com/tanvirtin/monokai.nvim
+[submodule "site/pack/simpoir/opt/formatter.nvim"]
+	path = site/pack/simpoir/opt/formatter.nvim
+	url = https://github.com/mhartington/formatter.nvim
+[submodule "site/pack/simpoir/opt/coq_nvim"]
+	path = site/pack/simpoir/opt/coq_nvim
+	url = https://github.com/ms-jpq/coq_nvim

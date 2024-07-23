@@ -109,6 +109,14 @@ function M.PackClean()
 		local dst = install_path .. packs_dir .. v
 		print("Trimming", dst)
 		vim.fn.delete(dst, "rf")
+		vim.fn.system({
+			"sed",
+			"-i",
+			"-z",
+			"-e",
+			[[s/\[submodule "[^"]*]].. v .."^[]*//",
+			".gitmodules",
+		})
 	end
 end
 

@@ -38,11 +38,11 @@ require("simpoir.packman").setup({
 	----------------------------------------
 	"flazz/vim-colorschemes", -- one of the largest/oldest theme collection
 	"tanvirtin/monokai.nvim",
-	"mhinz/vim-signify", -- like gitgutter for all
+	"mhinz/vim-signify",     -- like gitgutter for all
 	"liuchengxu/vim-which-key", -- the backslash menu
-	"yggdroot/indentLine", -- show line indentation
-	"exvim/ex-showmarks", -- show (book)marks in gutter
-	"nvim-web-devicons", -- icons mapping, required by tree and compl
+	"yggdroot/indentLine",   -- show line indentation
+	"exvim/ex-showmarks",    -- show (book)marks in gutter
+	"nvim-web-devicons",     -- icons mapping, required by tree and compl
 
 	-- LSP and IDE lang stack
 	----------------------------------------
@@ -50,53 +50,41 @@ require("simpoir.packman").setup({
 	"williamboman/mason-lspconfig.nvim",
 	"neovim/nvim-lspconfig", -- common configs for LSP
 	"mfussenegger/nvim-dap", -- debug adapter protocol
-	{ -- hovering lsp diagnostics
+	{                       -- hovering lsp diagnostics
 		"dgagn/diagflow.nvim",
 		config = function()
 			require("diagflow").setup({})
 		end,
 	},
 	"theHamsta/nvim-dap-virtual-text", -- show variables inline in debug
-	"nvim-lua/plenary.nvim", -- lua boilerplate, for null-ls
-	"jose-elias-alvarez/null-ls.nvim", -- extra linting/formatting
+	"nvim-lua/plenary.nvim",        -- lua boilerplate, for telescope
 
 	-- Coding
 	----------------------------------------
 	"goolord/alpha-nvim", -- startup menu
 	"embear/vim-localvimrc", -- .lvimrc support
-	"janko-m/vim-test", -- generic test runner
-	{ -- nightly minimal completion engine
+	"janko-m/vim-test",   -- generic test runner
+	{                     -- nightly minimal completion engine
 		"echasnovski/mini.nvim",
 		config = function()
 			require("mini.comment").setup({
 				-- map commenting to ctrl-c, helix-style
 				mappings = { comment = "<C-c>", comment_line = "<C-c>", comment_visual = "<C-c>" },
 			})
-			require("mini.completion").setup({
-				window = {
-					info = { height = 25, width = 80, border = "rounded" },
-					signature = { height = 25, width = 80, border = "rounded" },
-				},
-			})
 			require("mini.statusline").setup({})
 			require("mini.tabline").setup({})
-
-			-- enable autoimport
+		end,
+	},
+	{
+		"ms-jpq/coq_nvim",
+		config = function()
+			g.coq_settings = { auto_start = "shut-up" }
+			local coq = require("coq")
 			local lspconfig = require("lspconfig")
-			lspconfig.util.on_setup = function(config)
-				config.capabilities.textDocument.completion.completionItem.snippetSupport = true
-				config.capabilities.textDocument.completion.completionItem.resolveSupport =
-					{ properties = {
-						"documentation",
-						"detail",
-						"additionalTextEdits",
-					} }
-			end
-			-- snip nav alternative
-			cmd([[:nnoremap <A-j> /$\(\d\\|[^}]*\}\)<CR>gnc]])
-			cmd([[:nnoremap <A-k> ?$\(\d\\|[^}]*\}\)<CR>gNc]])
-			cmd([[:inoremap <A-j> <esc>/$\(\d\\|[^}]*\}\)<CR>gnc]])
-			cmd([[:inoremap <A-k> <esc>?$\(\d\\|[^}]*\}\)<CR>gNc]])
+			lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(config)
+				local cap = coq.lsp_ensure_capabilities(config)
+				config.capabilities = cap.capabilities
+			end)
 		end,
 	},
 
@@ -135,15 +123,15 @@ require("simpoir.packman").setup({
 	-- Tooling
 	----------------------------------------
 	"nvim-telescope/telescope.nvim", -- like fzf, but lua
-	"tpope/vim-obsession", -- auto session management
-	"tpope/vim-fugitive", -- git commands
+	"tpope/vim-obsession",        -- auto session management
+	"tpope/vim-fugitive",         -- git commands
 	-- "airblade/vim-rooter", -- autochdir to repo
 	"junkblocker/patchreview-vim", -- side-by-side diff viewer
-	"mbbill/undotree", -- visual undo tree
-	"kopischke/vim-fetch", -- file:line remapper
-	"kyazdani42/nvim-tree.lua", -- file tree
-	"liuchengxu/vista.vim", -- taglist panel, with lsp support
-	"romainl/vim-cool", -- auto-toggle hls
+	"mbbill/undotree",            -- visual undo tree
+	"kopischke/vim-fetch",        -- file:line remapper
+	"kyazdani42/nvim-tree.lua",   -- file tree
+	"liuchengxu/vista.vim",       -- taglist panel, with lsp support
+	"romainl/vim-cool",           -- auto-toggle hls
 })
 
 -- compat
@@ -227,7 +215,7 @@ require("telescope").setup({
 require("mason-lspconfig").setup({
 	automatic_installation = true,
 })
-g.lsp_formatters_disabled = { "pylsp", "jedi_language_server", "lua_ls" }
+g.lsp_formatters_disabled = {}
 function FilteredFormat()
 	if vim.lsp.buf.format ~= nil then
 		vim.lsp.buf.format({
@@ -254,9 +242,11 @@ lspconfig.yamlls.setup({
 		yaml = {
 			schemas = {
 				["https://cdn.jsdelivr.net/gh/techhat/openrecipeformat/schema.json"] = "*.orf.yml",
-				["https://cdn.jsdelivr.net/gh/cappyzawa/concourse-pipeline-jsonschema@v6.5.0/concourse_jsonschema.json"] = "pipeline.yml",
+				["https://cdn.jsdelivr.net/gh/cappyzawa/concourse-pipeline-jsonschema@v6.5.0/concourse_jsonschema.json"] =
+				"pipeline.yml",
 				["/home/simpoir/Source/scratchpad/jjb.schema"] = "jenkins/**/*",
-				["https://raw.githubusercontent.com/canonical/cloud-init/main/cloudinit/config/schemas/schema-cloud-config-v1.json"] = "*.cloud",
+				["https://raw.githubusercontent.com/canonical/cloud-init/main/cloudinit/config/schemas/schema-cloud-config-v1.json"] =
+				"*.cloud",
 			},
 			customTags = {
 				"!j2:",
@@ -284,10 +274,12 @@ vim.api.nvim_create_autocmd("BufRead", {
 })
 
 lspconfig.rust_analyzer.setup({
-	settings = { ["rust-analyzer"] = {
-		checkOnSave = { command = "clippy" },
-		autoimport = { enable = true },
-	} },
+	settings = {
+		["rust-analyzer"] = {
+			checkOnSave = { command = "clippy" },
+			autoimport = { enable = true },
+		}
+	},
 })
 local lua_libs = vim.api.nvim_get_runtime_file("", true)
 table.insert(lua_libs, "/usr/share/awesome/lib")
@@ -352,21 +344,6 @@ lspconfig.ltex.setup({
 
 -- non-lsp lang bits
 opt.tabstop = 2
-local nuls = require("null-ls")
-nuls.setup({
-	autostart = true,
-	sources = {
-		nuls.builtins.formatting.stylua,
-		nuls.builtins.formatting.black.with({ extra_args = { "-l", "120" } }),
-		nuls.builtins.formatting.isort,
-		-- method = nuls.builtins.formatting.yapf,
-		nuls.builtins.diagnostics.fish,
-		nuls.builtins.diagnostics.flake8.with({
-			extra_args = { "--max-line-length=120" },
-		}),
-		nuls.builtins.code_actions.shellcheck,
-	},
-})
 
 vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
 	virtual_text = false, -- provided by diagflow
@@ -651,6 +628,18 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 vim.api.nvim_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<cr>", {})
 vim.api.nvim_set_keymap("n", "gD", "<cmd>lua vim.lsp.buf.type_definition()<cr>", {})
 vim.api.nvim_set_keymap("n", "ge", "<cmd>Telescope diagnostics<cr>", {})
+vim.api.nvim_set_keymap(
+	"n",
+	"gne",
+	"<cmd>lua vim.diagnostic.goto_next()<cr>",
+	{ noremap = true, silent = true, desc = "next error" }
+)
+vim.api.nvim_set_keymap(
+	"n",
+	"<C-q>",
+	"<cmd>lua vim.lsp.buf.code_action({apply=true, filter=function(a) return a.isPreferred end})<cr>",
+	{ noremap = true, silent = true, desc = "quickfix" }
+)
 
 -- Helix-style syntactic incremental selection. Alt-i Alt-o
 VisualNode = {}
@@ -682,6 +671,7 @@ function VisualBlockNode(pop)
 	vim.cmd("normal! v")
 	vim.fn.cursor(end_l + 1, end_c)
 end
+
 vim.api.nvim_set_keymap("v", "<A-o>", "<cmd>lua VisualBlockNode()<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<A-o>", "<cmd>lua VisualBlockNode()<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("v", "<A-i>", "<cmd>lua VisualBlockNode(true)<cr>", { noremap = true, silent = true })
@@ -709,6 +699,7 @@ function VisualBlockSiblingNode(prev)
 	vim.cmd("normal! v")
 	vim.fn.cursor(end_l + 1, end_c)
 end
+
 vim.api.nvim_set_keymap("v", "<A-n>", "<cmd>lua VisualBlockSiblingNode()<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<A-n>", "<cmd>lua VisualBlockSiblingNode()<cr>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("v", "<A-p>", "<cmd>lua VisualBlockSiblingNode(true)<cr>", { noremap = true, silent = true })
@@ -729,5 +720,6 @@ function CleanBufs()
 		end
 	end
 end
+
 cmd([[command CleanBufs lua CleanBufs()]])
 -- vim: ts=4

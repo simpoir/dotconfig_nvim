@@ -76,5 +76,13 @@ require("nvim-tree").setup({
 	},
 })
 
+-- Add borders to lsp hovers windows
+local _orig_float = vim.lsp.util.open_floating_preview
+function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
+	opts = opts or {}
+	opts.border = opts.border or "rounded"
+	_orig_float(contents, syntax, opts, ...)
+end
+
 return M
 -- vim: ts=4
