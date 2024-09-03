@@ -68,14 +68,6 @@ function M.setup(opts)
 	opt.completeopt = "noinsert,menuone,noselect"
 end
 
-require("nvim-tree").setup({
-	actions = {
-		open_file = {
-			quit_on_open = true,
-		},
-	},
-})
-
 -- Add borders to lsp hovers windows
 local _orig_float = vim.lsp.util.open_floating_preview
 function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)

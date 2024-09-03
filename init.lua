@@ -30,109 +30,7 @@ local fn = vim.fn
 local g = vim.g
 local opt = vim.opt
 
-----------------------------------------
--- Packages
-----------------------------------------
-require("simpoir.packman").setup({
-	-- Appearance
-	----------------------------------------
-	"flazz/vim-colorschemes", -- one of the largest/oldest theme collection
-	"tanvirtin/monokai.nvim",
-	"mhinz/vim-signify",     -- like gitgutter for all
-	"liuchengxu/vim-which-key", -- the backslash menu
-	"yggdroot/indentLine",   -- show line indentation
-	"exvim/ex-showmarks",    -- show (book)marks in gutter
-	"nvim-web-devicons",     -- icons mapping, required by tree and compl
-
-	-- LSP and IDE lang stack
-	----------------------------------------
-	"williamboman/mason.nvim", -- lsp, dap, linter, formatter installer
-	"williamboman/mason-lspconfig.nvim",
-	"neovim/nvim-lspconfig", -- common configs for LSP
-	"mfussenegger/nvim-dap", -- debug adapter protocol
-	{                       -- hovering lsp diagnostics
-		"dgagn/diagflow.nvim",
-		config = function()
-			require("diagflow").setup({})
-		end,
-	},
-	"theHamsta/nvim-dap-virtual-text", -- show variables inline in debug
-	"nvim-lua/plenary.nvim",        -- lua boilerplate, for telescope
-
-	-- Coding
-	----------------------------------------
-	"goolord/alpha-nvim", -- startup menu
-	"embear/vim-localvimrc", -- .lvimrc support
-	"janko-m/vim-test",   -- generic test runner
-	{                     -- nightly minimal completion engine
-		"echasnovski/mini.nvim",
-		config = function()
-			require("mini.comment").setup({
-				-- map commenting to ctrl-c, helix-style
-				mappings = { comment = "<C-c>", comment_line = "<C-c>", comment_visual = "<C-c>" },
-			})
-			require("mini.statusline").setup({})
-			require("mini.tabline").setup({})
-		end,
-	},
-	{
-		"ms-jpq/coq_nvim",
-		config = function()
-			g.coq_settings = { auto_start = "shut-up" }
-			local coq = require("coq")
-			local lspconfig = require("lspconfig")
-			lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(config)
-				local cap = coq.lsp_ensure_capabilities(config)
-				config.capabilities = cap.capabilities
-			end)
-		end,
-	},
-
-	-- Syntax
-	----------------------------------------
-	"knatsakis/deb.vim", -- support for xz
-	"dbeniamine/todo.txt-vim",
-	"folke/trouble.nvim",
-	"nvim-treesitter/nvim-treesitter",
-	"nvim-treesitter/nvim-treesitter-textobjects",
-	"windwp/nvim-ts-autotag", -- auto close tags using ts
-
-	-- Edition
-	----------------------------------------
-	"tpope/vim-sleuth", -- auto shiftwidth
-	{
-		"matze/vim-move", -- alt-arrow line moving
-		config = function()
-			-- Default binds are prone to accidental moves.
-			g.move_map_keys = 0
-			cmd("vmap <A-j> <Plug>MoveBlockDown")
-			cmd("vmap <A-k> <Plug>MoveBlockUp")
-		end,
-	},
-	"jqno/jqno-extractvariable.vim",
-	"tpope/vim-surround",
-	{
-		"windwp/nvim-autopairs", -- autoclose pairs
-		config = function()
-			require("nvim-autopairs").setup({
-				check_ts = true,
-			})
-		end,
-	},
-
-	-- Tooling
-	----------------------------------------
-	"nvim-telescope/telescope.nvim", -- like fzf, but lua
-	"tpope/vim-obsession",        -- auto session management
-	"tpope/vim-fugitive",         -- git commands
-	-- "airblade/vim-rooter", -- autochdir to repo
-	"junkblocker/patchreview-vim", -- side-by-side diff viewer
-	"mbbill/undotree",            -- visual undo tree
-	"kopischke/vim-fetch",        -- file:line remapper
-	"kyazdani42/nvim-tree.lua",   -- file tree
-	"liuchengxu/vista.vim",       -- taglist panel, with lsp support
-	"romainl/vim-cool",           -- auto-toggle hls
-})
+require("config.lazy")
 
 -- compat
 opt.shell = "/bin/bash"
@@ -146,7 +44,6 @@ opt.clipboard = "unnamedplus"
 g.Todo_fold_char = ""
 
 -- avoid switching to subdirs when opening project files.
--- Rooter will switch to the project root.
 opt.autochdir = false
 
 opt.scrolloff = 5 -- scroll margin
@@ -186,35 +83,12 @@ g.indentLine_concealcursor = "c"
 ----------------------------------------
 g.localvimrc_persistent = 1
 g.localvimrc_name = { ".lvimrc", ".lvimrc.lua", "_vimrc_local.vim" }
--- g.rooter_change_directory_for_non_project_files = "current" -- soothes LSP in home dir
--- g.rooter_patterns = { ".git", ".bzr", "Makefile", "Cargo.toml", "debian" }
 g.signify_vcs_cmds = { bzr = "bzr diff --diff-options=-U0 -- %f" }
 
-require("nvim-tree").setup({
-	view = {
-		width = 30,
-	},
-	filters = {
-		dotfiles = true,
-	},
-})
-require("telescope").setup({
-	defaults = {
-		-- no_ignore_parent = true,
-		mappings = {
-			i = {
-				["<esc>"] = require("telescope.actions").close,
-			},
-		},
-	},
-})
 
 ----------------------------------------
 -- LSP
 ----------------------------------------
-require("mason-lspconfig").setup({
-	automatic_installation = true,
-})
 g.lsp_formatters_disabled = {}
 function FilteredFormat()
 	if vim.lsp.buf.format ~= nil then
@@ -316,20 +190,6 @@ lspconfig.pylsp.setup({
 		},
 	},
 })
-
--- It seems to randomly corrupt it's buffer and see phantom issues on format.
--- lspconfig.pyright.setup({
--- 	settings = {
--- 		python = {
--- 			analysis = {
--- 				useLibraryCodeForTypes = true,
--- 				diagnosticSeverityOverrides = {
--- 					reportPrivateImportUsage = "none",
--- 				},
--- 			},
--- 		},
--- 	},
--- })
 
 -- auto setup other installed servers
 for _, srv in ipairs(require("mason-lspconfig").get_installed_servers()) do
@@ -515,7 +375,12 @@ dap.configurations.c = {
 		request = "launch",
 		MIMode = "gdb",
 		program = function()
-			g.program = vim.fn.input({ prompt = "Path to executable: ", text = g.program or "", completion = "file" })
+			g.program = vim.fn.input({
+				prompt = "Path to executable: ",
+				text = g.program or "",
+				completion =
+				"file"
+			})
 			return g.program
 		end,
 		cwd = "${workspaceFolder}",
@@ -529,7 +394,12 @@ dap.configurations.rust = {
 		MIMode = "gdb",
 		miDebuggerPath = fn.environ().HOME .. "/.cargo/bin/rust-gdb",
 		program = function()
-			return vim.fn.input({ prompt = "Path to executable: ", text = vim.fn.getcwd() .. "/", completion = "file" })
+			return vim.fn.input({
+				prompt = "Path to executable: ",
+				text = vim.fn.getcwd() .. "/",
+				completion =
+				"file"
+			})
 		end,
 		cwd = "${workspaceFolder}",
 		args = {},
@@ -707,6 +577,7 @@ vim.api.nvim_set_keymap("n", "<A-p>", "<cmd>lua VisualBlockSiblingNode(true)<cr>
 
 -- shift-k already was used for showing manpages. Hijack to show any LSP documentation.
 vim.api.nvim_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("i", "<C-s>", "<cmd>lua vim.lsp.buf.signature_help()<cr>", { noremap = true, silent = true })
 -- jump between start and end of visual selection. Also mimics helix.
 vim.api.nvim_set_keymap("v", "<A-;>", "o", {})
 
