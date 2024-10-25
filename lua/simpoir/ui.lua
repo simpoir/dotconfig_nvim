@@ -54,6 +54,7 @@ function M.setup(opts)
 	g.neovide_cursor_vfx_mode = "railgun"
 	g.neovide_transparency = 0.95
 	g.neovide_refresh_rate = 20
+	g.neovide_hide_mouse_when_typing = true
 	g.airline_powerline_fonts = 1
 
 	opt.colorcolumn = "80"

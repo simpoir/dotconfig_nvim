@@ -34,6 +34,9 @@ require("config.lazy")
 
 -- compat
 opt.shell = "/bin/bash"
+-- termsync induces some glitches pasting/deleting multiple lines with multi
+-- windows on wezterm with mux.
+-- opt.termsync = false
 
 ----------------------------------------
 -- Look and feel
@@ -76,20 +79,20 @@ vim.api.nvim_create_autocmd("BufEnter", {
 
 opt.updatetime = 200 -- time between keystrokes which is considered idle.
 g.indentLine_char = "┊"
+-- hide markup bits (e.g. json quotes) except on hover
+g.conceal_level = 0
 g.indentLine_concealcursor = "c"
 
 ----------------------------------------
 -- Tooling
 ----------------------------------------
-g.localvimrc_persistent = 1
-g.localvimrc_name = { ".lvimrc", ".lvimrc.lua", "_vimrc_local.vim" }
 g.signify_vcs_cmds = { bzr = "bzr diff --diff-options=-U0 -- %f" }
 
 
 ----------------------------------------
 -- LSP
 ----------------------------------------
-g.lsp_formatters_disabled = {}
+g.lsp_formatters_disabled = { "pylsp" }
 function FilteredFormat()
 	if vim.lsp.buf.format ~= nil then
 		vim.lsp.buf.format({
@@ -172,13 +175,13 @@ lspconfig.lua_ls.setup({
 				preloadFileSize = 10000,
 				checkThirdParty = false,
 			},
-			telemetry = {
-				enable = false,
-			},
+			telemetry = { enable = false },
+			hint = { enable = true },
 		},
 	},
 })
 lspconfig.pylsp.setup({
+	cmd = { "/usr/bin/pylsp" },
 	settings = {
 		pylsp = {
 			plugins = {
@@ -189,6 +192,22 @@ lspconfig.pylsp.setup({
 			},
 		},
 	},
+})
+lspconfig.basedpyright.setup({
+	settings = {
+		basedpyright = {
+			analysis = {
+				diagnosticSeverityOverrides = {
+					reportUnknownVariableType = "none",
+					reportUnknownMemberType = "none",
+					reportAny = "none",
+					reportUnusedCallResult = "none",
+					reportPrivateImportUsage = "none",
+					reportAssignmentType = "none",
+				}
+			}
+		}
+	}
 })
 
 -- auto setup other installed servers
@@ -214,66 +233,58 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagn
 ----------------------------------------
 -- Pretty Mappings
 ----------------------------------------
-fn["which_key#register"]("<Space>", "g:lmap")
-vim.api.nvim_set_keymap("n", "<Space>", "<cmd>WhichKey '<Space>'<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("v", "<Space>", "<cmd>WhichKeyVisual '<Space>'<CR>", { noremap = true, silent = true })
+local whichkey = require("which-key")
+whichkey.add({
+	{ "<Space>c", group = "Cursor" },
+	{ "<Space>cb", "<cmd>!xdg-open https://pad.lv/<cword><cr>", desc = "Launchpad Bug" },
+
+	{ "<Space>d", group = "Debug" },
+	{ "<Space>db", require "dap".toggle_breakpoint, desc = "Break" },
+	{ "<Space>dn", require "dap".step_over, desc = "Next" },
+	{ "<Space>dx", require "dap".repl.open, desc = "Eval" },
+	{ "<Space>ds", require "dap.ui.widgets".sidebar(require "dap.ui.widgets".scopes).open, desc = "Scopes" },
+	{ "<Space>dc", require "dap".continue, desc = "Continue" },
+	{ "<Space>dt", function() DbgRustTests() end, desc = "Debug tests" },
+
+	{ "<Space>f", group = "Files" },
+	{ "<Space>fa", function() Alternate() end, desc = "jump to Alternate file." },
+	{ "<Space>fb", "<cmd>Telescope buffers<cr>", desc = "Find buffer" },
+	{ "<Space>fc", function() BufGone() end, desc = "Close buffer and switch to next" },
+	{ "<Space>fd", "<cmd>e $MYVIMRC<cr>", desc = "Open dotfile" },
+	{ "<Space>fp", function() cmd("Explore " .. vim.fs.dirname(vim.fn.getenv("MYVIMRC")) .. "/lua/plugins/") end, desc = "Open plugins" },
+	{ "<Space>ff", "<cmd>Telescope find_files<cr>", desc = "Find file" },
+	{ "<Space>fF", "<cmd>Telescope git_files<cr>", desc = "Repository find" },
+	{ "<Space>fj", "<cmd>Telescope jumplist<cr>", desc = "Jump list" },
+	{ "<Space>fG", function() TelescopeSel() end, desc = "Grep selection", mode = 'nv' },
+	{ "<Space>fg", "<cmd>Telescope live_grep<cr>", desc = "Live Grep" },
+	{ "<Space>ft", "<cmd>NvimTreeFindFile<cr>", desc = "file Tree toggle" },
+
+	{ "<Space>g", group = "Git" },
+	{ "<Space>gs", "<cmd>Git<cr>", desc = "status" },
+	{ "<Space>gb", "<cmd>Git blame<cr>", desc = "blame" },
+	{ "<Space>gc", "<cmd>Git commit<cr>", desc = "commit" },
+	{ "<Space>gl", "<cmd>Git log --graph --decorate<cr>", desc = "log" },
+
+	{ "<Space>l", group = "Language", icon = "  " },
+	{ "<Space>la", vim.lsp.buf.code_action, desc = "Actions" },
+	{ "<Space>ld", vim.lsp.buf.definition, desc = "Definition" },
+	{ "<Space>lD", vim.lsp.buf.type_definition, desc = "Type definition" },
+	{ "<Space>lf", function() FilteredFormat() end, desc = "Format file" },
+	{ "<Space>le", function() require 'trouble'.toggle { mode = 'diagnostics' } end, desc = "Diagnostics" },
+	{ "<Space>lh", vim.lsp.buf.hover, desc = "hover" },
+	{ "<Space>lH", function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled()) end, desc = "Toggle Hints" },
+	{ "<Space>li", vim.lsp.buf.implementation, desc = "Implementation" },
+	{ "<Space>lI", "<cmd>LspInfo<cr>", desc = "Lsp Info" },
+	{ "<Space>lr", vim.lsp.buf.rename, desc = "Rename symbol" },
+	{ "<Space>lR", vim.lsp.buf.references, desc = "Find References" },
+	{ "<Space>lS", "<cmd>Mason<cr>", desc = "Install" },
+
+	{ "<Space>t", group = "Test" },
+	{ "<Space>tf", "<cmd>TestFile<cr>", desc = "Test file" },
+	{ "<Space>tl", "<cmd>TestLast<cr>", desc = "Retest last" },
+	{ "<Space>tn", "<cmd>TestNearest<cr>", desc = "Test nearest" },
+})
 vim.api.nvim_set_keymap("v", "<Space>ev", "<Plug>(extractVariableVisual)", { noremap = true, silent = true })
-g.lmap = {
-	name = "Global",
-	c = {
-		name = "Cursor",
-		b = { ":!xdg-open https://pad.lv/<cword>", "Launchpad Bug" },
-	},
-	d = {
-		name = "Debug",
-		b = { "luaeval('require\"dap\".toggle_breakpoint()')", "Break" },
-		n = { "luaeval('require\"dap\".step_over()')", "Next" },
-		x = { "luaeval('require\"dap\".repl.open()')", "Eval" },
-		s = { 'luaeval(\'require"dap.ui.widgets".sidebar(require"dap.ui.widgets".scopes).open()\')', "Scopes" },
-		c = { "luaeval('require\"dap\".continue()')", "Continue" },
-		t = { "v:lua.DbgRustTests()", "Debug tests" },
-	},
-	f = {
-		name = "Files",
-		a = { "v:lua.Alternate()", "jump to Alternate file." },
-		b = { ":Telescope buffers", "Find buffer" },
-		c = { "v:lua.BufGone()", "Close buffer and switch to next" },
-		d = { ":e $MYVIMRC", "Open dotfile" },
-		f = { ":Telescope find_files", "Find file" },
-		F = { ":Telescope git_files", "Repository find" },
-		j = { ":Telescope jumplist", "Jump list" },
-		G = { ":lua require'telescope.builtin'.live_grep{default_text=vim.fn.expand('<cword>')}", "Grep cursor" },
-		g = { ":Telescope live_grep", "Live Grep" },
-		t = { "NvimTreeFindFile", "file Tree toggle" },
-	},
-	g = {
-		name = "Git",
-		s = { ":Git", "status" },
-		b = { ":Git blame", "blame" },
-		c = { ":Git commit", "commit" },
-		l = { ":Git log --graph --decorate", "log" },
-	},
-	l = {
-		name = "Language",
-		a = { "luaeval('vim.lsp.buf.code_action()')", "Actions" },
-		d = { "luaeval('vim.lsp.buf.definition()')", "Definition" },
-		D = { "luaeval('vim.lsp.buf.type_definition()')", "Type definition" },
-		f = { "v:lua.FilteredFormat()", "Format file" },
-		e = { "Trouble", "Diagnostics" },
-		h = { "luaeval('vim.lsp.buf.hover()')", "hover" },
-		i = { "luaeval('vim.lsp.buf.implementation()')", "Implementation" },
-		I = { "LspInfo", "Lsp Info" },
-		r = { "luaeval('vim.lsp.buf.rename()')", "Rename symbol" },
-		R = { "luaeval('vim.lsp.buf.references()')", "Find References" },
-		S = { "Mason", "Install" },
-	},
-	t = {
-		name = "Test",
-		f = { ":TestFile", "Test file" },
-		l = { ":TestLast", "Retest last" },
-		n = { ":TestNearest", "Test nearest" },
-	},
-}
 
 vim.api.nvim_set_keymap(
 	"i",
@@ -304,8 +315,19 @@ command! WriteAsRoot %!env SUDO_ASKPASS=/usr/bin/ssh-askpass sudo tee %
 augroup END
 ]])
 
+function TelescopeSel()
+	vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "x", false)
+	local prefill
+	local a = vim.fn.getpos("'<")
+	local b = vim.fn.getpos("'>")
+	prefill = vim.fn.getregion(a, b, { type = 'v' })[1]
+	-- some escaping
+	prefill = prefill:gsub("{", "\\{")
+	require 'telescope.builtin'.live_grep { default_text = prefill }
+end
+
 function Alternate()
-	local filetype = vim.api.nvim_buf_get_option(0, "filetype")
+	local filetype = vim.api.nvim_get_option_value("filetype", { scope = "local" })
 	if filetype == "python" then
 		local alt = fn.matchlist(fn.expand("%:p"), [[^\(.*/\)tests/test_\(.*\.py\)$]])
 		if #alt == 0 then
@@ -348,7 +370,7 @@ function DbgRustTests()
 	dap.continue()
 end
 
-cmd("command DbgRustTests lua DbgRustTests()")
+cmd("command! DbgRustTests lua DbgRustTests()")
 
 local dap = require("dap")
 dap.defaults.fallback.force_external_terminal = true
@@ -479,7 +501,7 @@ vim.treesitter.language.register("htmldjango", "html")
 -- hack in bash+django
 vim.api.nvim_create_autocmd("BufReadPost", {
 	pattern = { "*.j2" },
-	callback = function(ev)
+	callback = function()
 		vim.treesitter.language.register("htmldjango", "shjinja")
 		vim.treesitter.query.set(
 			"htmldjango",
@@ -586,11 +608,12 @@ function CleanBufs()
 	local here = vim.fn.getcwd()
 	for _, b in ipairs(vim.api.nvim_list_bufs()) do
 		local name = vim.api.nvim_buf_get_name(b)
-		if name:sub(1, 1) == "/" and name:sub(1, here:len()) ~= here then
+		local first_char = name:sub(1, 1)
+		if (first_char == "/" or first_char == "~") and name:sub(1, here:len()) ~= here then
 			vim.api.nvim_buf_delete(b, {})
 		end
 	end
 end
 
-cmd([[command CleanBufs lua CleanBufs()]])
+cmd([[command! CleanBufs lua CleanBufs()]])
 -- vim: ts=4

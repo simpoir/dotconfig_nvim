@@ -3,11 +3,27 @@ return {
 	----------------------------------------
 	{ "flazz/vim-colorschemes", lazy = false }, -- one of the largest/oldest theme collection
 	{ "tanvirtin/monokai.nvim", lazy = false },
-	"mhinz/vim-signify",        -- like gitgutter for all
-	"liuchengxu/vim-which-key", -- the backslash menu
+	-- "mhinz/vim-signify",                     -- like gitgutter for also bzr
+	{
+		"lewis6991/gitsigns.nvim", -- git signs
+		event = "BufEnter",
+		config = function()
+			require 'gitsigns'.setup({})
+			vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#00cc00" })
+			vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#cc3300" })
+		end,
+	},
+
+	{
+		"folke/which-key.nvim", -- the space menu
+		opts = {
+			preset = "helix",
+		}
+	},
 	"yggdroot/indentLine",      -- show line indentation for expandtabs
 	"exvim/ex-showmarks",       -- show (book)marks in gutter
 	"nvim-tree/nvim-web-devicons", -- icons mapping, required by tree and compl
+	"j-hui/fidget.nvim",        -- LSP status spinner
 
 	-- LSP and IDE lang stack
 	----------------------------------------
@@ -15,34 +31,56 @@ return {
 	{
 		"williamboman/mason-lspconfig.nvim",
 		opts = { automatic_installation = true },
-		dependencies = {"mason.nvim"},
+		dependencies = { "mason.nvim" },
 	},
 	"neovim/nvim-lspconfig", -- common configs for LSP
 	"mfussenegger/nvim-dap", -- debug adapter protocol
-	"dgagn/diagflow.nvim", -- hovering lsp diagnostics
+	{
+		"dgagn/diagflow.nvim", -- hovering lsp diagnostics
+		opts = {},
+		event = 'LspAttach'
+	},
 	"theHamsta/nvim-dap-virtual-text", -- show variables inline in debug
 	"nvim-lua/plenary.nvim",        -- lua boilerplate, for telescope
 
 	-- Coding
 	----------------------------------------
-	"goolord/alpha-nvim", -- startup menu
-	"embear/vim-localvimrc", -- .lvimrc support
-	"janko-m/vim-test",   -- generic test runner
-	{                     -- nightly minimal completion engine
-		"echasnovski/mini.nvim",
+	"goolord/alpha-nvim",  -- startup menu
+	{
+		"embear/vim-localvimrc", -- .lvimrc support
+		lazy = false,
+		init = function()
+			vim.g.localvimrc_persistent = 1
+			vim.g.localvimrc_name = { ".lvimrc", ".lvimrc.lua", "_vimrc_local.vim" }
+		end,
+	},
+	"janko-m/vim-test",    -- generic test runner
+	{
+		"echasnovski/mini.nvim", -- various functionalities
 		config = function()
 			require("mini.comment").setup({
 				-- map commenting to ctrl-c, helix-style
 				mappings = { comment = "<C-c>", comment_line = "<C-c>", comment_visual = "<C-c>" },
 			})
 			require("mini.statusline").setup({})
-			require("mini.tabline").setup({})
+
+			-- require("mini.tabline").setup({})
 		end,
 	},
 	{
 		"ms-jpq/coq_nvim",
+		dependencies = { "ms-jpq/coq.artifacts", },
+		init = function()
+			vim.g.coq_settings = {
+				auto_start = "shut-up",
+				-- tmux completion is noisy in logs and I don't ever use it
+				clients = {
+					tmux = { enabled = false },
+					tags = { enabled = false },
+				},
+			}
+		end,
 		config = function()
-			vim.g.coq_settings = { auto_start = "shut-up" }
 			local coq = require("coq")
 			local lspconfig = require("lspconfig")
 			lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup,
